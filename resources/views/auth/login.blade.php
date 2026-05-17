@@ -1,0 +1,86 @@
+<x-guest-layout>
+    @php $title = 'Login'; @endphp
+
+    <div class="flex-1 flex items-center justify-center p-4 relative overflow-hidden bg-slate-50">
+        {{-- Ambient Glow Blobs --}}
+        <div class="absolute -top-40 -left-40 w-96 h-96 rounded-full bg-primary/10 blur-[100px] pointer-events-none animate-pulse"></div>
+        <div class="absolute -bottom-40 -right-40 w-96 h-96 rounded-full bg-secondary/10 blur-[100px] pointer-events-none animate-pulse" style="animation-delay: 2s;"></div>
+
+        <div class="w-full max-w-[1000px] flex rounded-2xl overflow-hidden bg-surface-container-lowest shadow-elevation-3 min-h-[600px] z-10">
+            {{-- Image Section (Desktop Only) --}}
+            <div class="hidden lg:block lg:w-1/2 relative overflow-hidden">
+                <img src="{{ asset('images/auth_login.png') }}" alt="Plan Together" class="absolute inset-0 w-full h-full object-cover" />
+                <div class="absolute inset-0 bg-gradient-to-br from-primary/30 to-secondary/30 mix-blend-multiply"></div>
+                <div class="absolute inset-0 flex flex-col justify-end p-10 z-10" style="background: linear-gradient(to top, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.3) 60%, transparent 100%) !important;">
+                    <h2 class="font-headline text-headline-lg mb-2" style="color: #ffffff !important;">Plan Together, Travel Better</h2>
+                    <p class="font-body text-body-lg" style="color: rgba(255, 255, 255, 0.9) !important;">WanderGroup makes organizing group trips effortless and inspiring.</p>
+                </div>
+            </div>
+
+            {{-- Login Form Section --}}
+            <div class="w-full lg:w-1/2 p-8 md:p-12 flex flex-col justify-center">
+                <div class="mb-8 text-center lg:text-left">
+                    <h1 class="font-headline text-headline-lg text-primary font-bold tracking-tight mb-2">WanderGroup</h1>
+                    <p class="font-body text-body-md text-on-surface-variant">Welcome back! Please enter your details.</p>
+                </div>
+
+                {{-- Validation Errors --}}
+                @if ($errors->any())
+                    <div class="mb-4 p-4 rounded-xl bg-error/10 text-on-error-container border border-error/20">
+                        <ul class="text-label-sm font-label space-y-1">
+                            @foreach ($errors->all() as $error)
+                                <li class="flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-[14px]">error</span>
+                                    {{ $error }}
+                                </li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+
+                <form method="POST" action="{{ route('login') }}" class="space-y-6">
+                    @csrf
+
+                    {{-- Email Input --}}
+                    <div class="space-y-1">
+                        <label class="block font-label text-label-md text-on-surface" for="login-email">Email</label>
+                        <div class="relative">
+                            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline-variant">mail</span>
+                            <input class="input-field" id="login-email" name="email" type="email" placeholder="Enter your email" value="{{ old('email') }}" required autofocus autocomplete="username">
+                        </div>
+                    </div>
+
+                    {{-- Password Input --}}
+                    <div class="space-y-1">
+                        <label class="block font-label text-label-md text-on-surface" for="login-password">Password</label>
+                        <div class="relative">
+                            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline-variant">lock</span>
+                            <input class="input-field" id="login-password" name="password" type="password" placeholder="••••••••" required autocomplete="current-password">
+                        </div>
+                    </div>
+
+                    {{-- Options --}}
+                    <div class="flex items-center justify-between">
+                        <label class="flex items-center space-x-2 cursor-pointer">
+                            <input class="rounded border-outline-variant text-primary focus:ring-primary" type="checkbox" name="remember">
+                            <span class="font-label text-label-md text-on-surface-variant">Remember me</span>
+                        </label>
+                        @if (Route::has('password.request'))
+                            <a class="font-label text-label-md text-primary hover:text-surface-tint transition-colors" href="{{ route('password.request') }}">Forgot password?</a>
+                        @endif
+                    </div>
+
+                    {{-- Submit Button --}}
+                    <button type="submit" class="w-full py-3 px-4 bg-primary text-on-primary rounded-full font-label text-label-md hover:bg-surface-tint transition-colors shadow-elevation-1 active:scale-95 duration-200">
+                        Sign In
+                    </button>
+                </form>
+
+                <p class="mt-8 text-center font-body text-body-md text-on-surface-variant">
+                    Don't have an account?
+                    <a class="font-label text-label-md text-primary hover:text-surface-tint transition-colors" href="{{ route('register') }}">Sign up</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</x-guest-layout>

@@ -1,0 +1,60 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: tripsync-app
+    restart: unless-stopped
+    ports:
+      - "8001:80"
+    volumes:
+      - .:/var/www
+      - ./storage:/var/www/storage
+    environment:
+      - APP_ENV=local
+      - APP_DEBUG=true
+      - DB_CONNECTION=pgsql
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_DATABASE=WanderGroup
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=admin123
+      - REDIS_HOST=redis
+    depends_on:
+      - db
+      - redis
+
+  db:
+    image: 'postgres:15-alpine'
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: 'WanderGroup'
+      POSTGRES_USER: 'postgres'
+      POSTGRES_PASSWORD: 'admin123'
+    volumes:
+      - tripsync-db:/var/lib/postgresql/data
+
+  redis:
+    image: 'redis:alpine'
+    restart: unless-stopped
+    volumes:
+      - tripsync-redis:/data
+
+  dozzle:
+    image: 'amir20/dozzle:latest'
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - "8080:8080"
+
+  mailpit:
+    image: 'axllent/mailpit:latest'
+    restart: unless-stopped
+    ports:
+      - "8025:8025"
+      - "1025:1025"
+
+volumes:
+  tripsync-db:
+  tripsync-redis:

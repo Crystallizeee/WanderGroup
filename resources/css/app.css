@@ -1,0 +1,117 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    html {
+        scroll-behavior: smooth;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+
+    body {
+        font-family: 'Inter', sans-serif;
+        color: #171c20;
+        background-color: #f5faff;
+    }
+
+    ::selection {
+        background-color: rgba(0, 101, 141, 0.15);
+        color: #003e58;
+    }
+}
+
+@layer components {
+    .btn-primary {
+        @apply bg-primary text-on-primary font-label px-6 py-3 rounded-full text-label-md
+               hover:bg-surface-tint transition-all shadow-elevation-1 hover:shadow-elevation-2
+               active:scale-95 duration-200 inline-flex items-center justify-center gap-2;
+    }
+
+    .btn-secondary {
+        @apply border-2 border-primary text-primary font-label px-6 py-3 rounded-full text-label-md
+               hover:bg-primary/5 transition-all active:scale-95 duration-200
+               inline-flex items-center justify-center gap-2;
+    }
+
+    .btn-ghost {
+        @apply text-on-surface-variant font-label px-4 py-2 rounded-lg text-label-md
+               hover:bg-surface-container-low transition-colors
+               inline-flex items-center justify-center gap-2;
+    }
+
+    .card {
+        @apply bg-surface-container-lowest rounded-xl shadow-elevation-1 p-5
+               hover:shadow-elevation-2 transition-shadow;
+    }
+
+    .input-field {
+        @apply w-full pl-10 pr-4 py-3 rounded-xl border border-outline-variant
+               bg-surface-container-lowest text-on-surface font-body text-body-md
+               focus:border-primary focus:ring-1 focus:ring-primary outline-none
+               transition-all shadow-sm;
+    }
+
+    .chip {
+        @apply inline-flex items-center gap-1 px-3 py-1 rounded-full
+               text-label-sm font-label cursor-pointer transition-colors;
+    }
+
+    .timeline-node {
+        @apply absolute -left-6 md:-left-8 w-6 h-6 rounded-full
+               flex items-center justify-center shadow-sm border-2 border-surface z-10;
+    }
+
+    .nav-item {
+        @apply flex items-center gap-3 px-4 py-3 rounded-xl font-label text-label-md
+               cursor-pointer transition-all duration-200 hover:translate-x-1;
+    }
+
+    .nav-item-active {
+        @apply bg-secondary-container text-on-secondary-container font-bold;
+    }
+
+    .nav-item-inactive {
+        @apply text-on-surface-variant hover:bg-surface-variant/50;
+    }
+
+    .bottom-nav-item {
+        @apply flex flex-col items-center justify-center text-on-surface-variant
+               active:scale-95 duration-200 px-3 py-1 rounded-full;
+    }
+
+    .bottom-nav-item-active {
+        @apply bg-primary-container text-on-primary-container;
+    }
+
+    .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+}
+
+@layer utilities {
+    .hide-scrollbar::-webkit-scrollbar {
+        display: none;
+    }
+    .hide-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+
+    .glass {
+        @apply bg-surface/80 backdrop-blur-md;
+    }
+
+    .pb-safe {
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    /* Mobile Navigation Utilities */
+    .z-sidebar-mobile { z-index: 100; }
+    .z-backdrop-mobile { z-index: 80; }
+    .z-bottom-nav-mobile { z-index: 90; }
+    .sidebar-hidden { transform: translateX(-100%); }
+    .sidebar-visible { transform: translateX(0); }
+}
