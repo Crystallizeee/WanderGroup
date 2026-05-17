@@ -1,58 +1,138 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# 🧭 WanderGroup — Smart Group Trip Planner & Expense Manager
 
 <p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
+  <img src="public/images/hero_logo.png" width="160" alt="WanderGroup Logo" style="border-radius: 2rem; box-shadow: 0 10px 25px rgba(0,0,0,0.1);">
 </p>
 
-## About Laravel
+<p align="center">
+  <strong>WanderGroup</strong> is a stunning, collaborative group trip planning and expense management platform built using <strong>Laravel 13</strong>, <strong>Tailwind CSS</strong>, <strong>PostgreSQL</strong>, and <strong>Gemini AI</strong>. It simplifies collaborative group travel from itinerary mapping down to splitting the bills and settling interpersonal debts.
+</p>
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+<p align="center">
+  <a href="https://laravel.com"><img src="https://img.shields.io/badge/Laravel-13.8.0-FF2D20?style=for-the-badge&logo=laravel" alt="Laravel 13"></a>
+  <a href="https://php.net"><img src="https://img.shields.io/badge/PHP-8.4.21-777BB4?style=for-the-badge&logo=php" alt="PHP 8"></a>
+  <a href="https://postgresql.org"><img src="https://img.shields.io/badge/PostgreSQL-16-4169E1?style=for-the-badge&logo=postgresql" alt="PostgreSQL"></a>
+  <a href="https://tailwindcss.com"><img src="https://img.shields.io/badge/Tailwind_CSS-3.4-38B2AC?style=for-the-badge&logo=tailwind-css" alt="Tailwind CSS"></a>
+  <a href="https://docker.com"><img src="https://img.shields.io/badge/Docker-Enabled-2496ED?style=for-the-badge&logo=docker" alt="Docker"></a>
+</p>
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+---
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## ✨ Features Showcase
 
-## Learning Laravel
+### 🗺️ Interactive Group Itinerary
+* **Collaborative Days**: Map out your group's adventure day-by-day. Any member can add, edit, or reorder activities.
+* **Interactive Leaflet Map Integration**: View your itinerary markers, routes, and geographic paths in real-time.
+* **Custom Notes**: Keep check-in details, booking links, or contact numbers right where everyone can see them.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+### 💰 Financial & Split Dashboard
+* **Flexible Bill Splitting**: Add expenses and split them using standard methods:
+  * **Split Equally**: Share bills perfectly across all members.
+  * **By Percentage (%)**: Allocate distinct fractional values per person.
+  * **Exact Amounts**: Record the exact rupiah spent per person.
+  * **Advanced Itemized Splits**: List individual receipt items and assign who bought what.
+* **Dynamic Paid-By Selector**: Select exactly who paid for each expense, both when adding new items or editing past logs.
+* **AI Receipt Scanner**: Snap a picture of your physical receipt. Powered by **Gemini AI Vision**, it instantly extracts the merchant title, total amount, category, and individual line items (quantity, unit price, total price) automatically.
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### 📊 Bento-Style Budgeting (Planned vs. Actual)
+* **Visual Expense Tracking**: Beautiful, premium Bento grid showing trip-wide planned category budgets vs. actual spending.
+* **Category Breakdown**: Keep tabs on Lodging, Food, Transport, Activities, and Misc separately.
+* **Individual Budget Limits**: Allocate custom maximum spending limits per user to prevent travel group overspending.
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+### 💳 Debt Settlement Solver (Optimized Simplifying Algorithm)
+* **Transaction Minimizer**: Uses an optimized Net-Balance transactional simplification algorithm (Debt Settlement Solver) to resolve interpersonal debts with the **minimum number of transactions**.
+* **Settlement History**: Maintain a transparent timeline of recorded group payments.
+* **Cancellation Safety (Undo/Delete)**: Made a mistake? Cancel a settlement with a single click. System automatically reverts settled tagihans back to unsettled, instantly updating everyone's balances.
 
-## Agentic Development
+### 🗳️ Decision-Making Group Polls
+* **Real-time Voting**: Can't decide on dinner or lodging? Create beautiful interactive polls with custom options.
+* **Organizer Management**: Trip organizers can securely close active polls once a decision has been reached.
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+### 🤖 WanderAI Smart Travel Companion
+* **Native AI Travel Chat**: Integrated conversational assistant that knows your trip details and itinerary, giving you customized tourist recommendations, dining options, packing tips, or local customs in seconds.
 
+### 📂 Collaborative Document Vault
+* **Group Storage**: Store flight tickets, booking confirmations, hotel vouchers, and ID scans securely in one shared space. Download or delete files on the go.
+
+### 👤 Bento-Style Travel Profiles
+* **Dietary Preferences & Custom Tags**: Personalize dietary tags (e.g., Vegetarian, Gluten-Free) or other custom travel styles.
+* **Travel Biography**: Beautiful profile card with interactive bio settings.
+
+---
+
+## 🛠️ Technology Stack
+
+* **Backend Framework:** Laravel 13.8.0
+* **Programming Language:** PHP 8.4.21 / 8.5.6
+* **Database:** PostgreSQL 16
+* **Frontend:** Tailwind CSS, Alpine.js, LeafletJS (Maps)
+* **AI Engine:** Google Gemini API (using Gemini Flash Vision model for OCR receipt scanning and conversational travel tips)
+* **Containerization:** Docker & Docker Compose
+
+---
+
+## 🚀 Quick Setup & Installation
+
+### 1. Clone & Prepare Environment
 ```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+git clone https://github.com/Crystallizeee/WanderGroup.git
+cd WanderGroup/app
+cp .env.example .env
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+### 2. Install Dependencies
+```bash
+composer install
+npm install
+npm run build # or npm run dev
+```
 
-## Contributing
+### 3. Setup Database & Key Settings
+Edit your `.env` file to configure your PostgreSQL credentials and Gemini API key:
+```env
+DB_CONNECTION=pgsql
+DB_HOST=127.0.0.1
+DB_PORT=5432
+DB_DATABASE=WanderGroup
+DB_USERNAME=your_username
+DB_PASSWORD=your_password
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+GEMINI_API_KEY=your_gemini_api_key
+```
 
-## Code of Conduct
+### 4. Run Migrations & Seed Database
+Initialize your tables along with sample trips, user accounts, and test data:
+```bash
+php artisan migrate --seed
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### 5. Start Development Server
+```bash
+php artisan serve
+```
+Open [http://127.0.0.1:8000](http://127.0.0.1:8000) in your browser!
 
-## Security Vulnerabilities
+---
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+## 🐳 Docker Production Deployment
 
-## License
+WanderGroup is deployed on a secure VPS at `192.168.1.181` inside a Docker setup.
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+### Useful Production Commands:
+```bash
+# Pull changes from main
+git pull origin main
+
+# Sync files into Docker container
+docker cp /var/www/WanderGroup/app/ wandergroup-app-1:/var/www/app
+
+# Clear application cache inside container
+docker exec wandergroup-app-1 php artisan config:clear
+docker exec wandergroup-app-1 php artisan route:clear
+docker exec wandergroup-app-1 php artisan view:clear
+```
+
+---
+
+## 📄 License
+This project is open-sourced software licensed under the [MIT license](LICENSE).
