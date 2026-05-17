@@ -26,15 +26,44 @@ class ProfileController extends Controller
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
-        $request->user()->fill($request->validated());
+        $request->validate([
+            'bio' => ['nullable', 'string', 'max:500'],
+            'avatar' => ['nullable', 'image', 'max:5120'], // 5MB max
+            'phone_number' => ['nullable', 'string', 'max:30'],
+            'language' => ['nullable', 'string', 'max:50'],
+            'dietary_requirements' => ['nullable', 'array'],
+            'dietary_requirements.*' => ['string', 'max:50'],
+            'travel_style' => ['nullable', 'string', 'in:Adventure,Relaxing,Cultural,Luxury'],
+        ]);
 
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
+        $user = $request->user();
+        $user->fill($request->validated());
+
+        if ($user->isDirty('email')) {
+            $user->email_verified_at = null;
         }
 
-        $request->user()->save();
+        if ($request->has('bio')) {
+            $user->bio = $request->input('bio');
+        }
 
-        return Redirect::route('profile.edit')->with('status', 'profile-updated');
+        if ($request->hasFile('avatar')) {
+            if ($user->avatar) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($user->avatar);
+            }
+            $user->avatar = $request->file('avatar')->store('avatars', 'public');
+        }
+
+        $prefs = $user->travel_preferences ?? [];
+        $prefs['phone_number'] = $request->input('phone_number');
+        $prefs['language'] = $request->input('language', 'English (US)');
+        $prefs['dietary_requirements'] = $request->input('dietary_requirements', []);
+        $prefs['travel_style'] = $request->input('travel_style', 'Adventure');
+        $user->travel_preferences = $prefs;
+
+        $user->save();
+
+        return Redirect::route('profile.edit')->with('success', 'Profile updated successfully!');
     }
 
     /**
