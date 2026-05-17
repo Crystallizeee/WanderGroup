@@ -67,8 +67,8 @@
         {{-- 1. Hero Section --}}
         <section class="relative w-full px-container-padding-mobile md:px-container-padding-desktop py-stack-lg md:py-[120px] flex items-center justify-center overflow-hidden min-h-[80vh]">
             <div class="absolute inset-0 z-0">
-                <img src="{{ asset('images/hero_travel_group.png') }}" alt="Group of friends traveling" class="absolute inset-0 w-full h-full object-cover opacity-20" />
-                <div class="absolute inset-0 bg-gradient-to-b from-surface/90 via-surface/95 to-surface-container-lowest z-10 backdrop-blur-[3px]"></div>
+                <img src="{{ asset('images/hero_travel_group.png') }}" alt="Group of friends traveling" class="absolute inset-0 w-full h-full object-cover opacity-50" />
+                <div class="absolute inset-0 bg-gradient-to-b from-surface/40 via-surface/60 to-surface-container-lowest z-10 backdrop-blur-[2px]"></div>
             </div>
             <div class="relative z-20 text-center max-w-4xl mx-auto flex flex-col items-center gap-stack-lg">
                 <div class="flex flex-col gap-stack-sm">
