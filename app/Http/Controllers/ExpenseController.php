@@ -28,6 +28,7 @@ class ExpenseController extends Controller
             'title' => ['required', 'string', 'max:255'],
             'amount' => ['required', 'numeric', 'min:0.01', 'max:999999999'],
             'category' => ['required', 'string', 'in:accommodation,food,transport,activity,shopping,other'],
+            'paid_by' => ['required', 'exists:users,id'],
             'split_method' => ['required', 'string', 'in:equal,exact,percentage,shares,itemized'],
             'expense_date' => ['required', 'date'],
             'notes' => ['nullable', 'string', 'max:1000'],
@@ -45,7 +46,6 @@ class ExpenseController extends Controller
 
         return DB::transaction(function () use ($validated, $trip, $request) {
             $validated['trip_id'] = $trip->id;
-            $validated['paid_by'] = Auth::id();
             $validated['currency'] = $trip->currency;
 
             if ($request->hasFile('receipt_image')) {
@@ -123,6 +123,7 @@ class ExpenseController extends Controller
             'title' => ['required', 'string', 'max:255'],
             'amount' => ['required', 'numeric', 'min:0.01', 'max:999999999'],
             'category' => ['required', 'string', 'in:accommodation,food,transport,activity,shopping,other'],
+            'paid_by' => ['required', 'exists:users,id'],
             'expense_date' => ['required', 'date'],
             'notes' => ['nullable', 'string', 'max:1000'],
         ]);

@@ -168,7 +168,7 @@
                             <td class="p-5 text-right font-display text-headline-sm text-primary">{{ rupiah($expense->amount) }}</td>
                             <td class="p-5 text-right">
                                 <div class="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <button type="button" onclick="openEditExpense({{ json_encode(['id' => $expense->id, 'title' => $expense->title, 'amount' => $expense->amount, 'category' => $expense->category, 'expense_date' => $expense->expense_date->format('Y-m-d'), 'notes' => $expense->notes]) }})" class="w-8 h-8 rounded-full flex items-center justify-center text-outline hover:bg-primary/10 hover:text-primary transition-all" title="Edit">
+                                    <button type="button" onclick="openEditExpense({{ json_encode(['id' => $expense->id, 'title' => $expense->title, 'amount' => $expense->amount, 'category' => $expense->category, 'expense_date' => $expense->expense_date->format('Y-m-d'), 'notes' => $expense->notes, 'paid_by' => $expense->paid_by]) }})" class="w-8 h-8 rounded-full flex items-center justify-center text-outline hover:bg-primary/10 hover:text-primary transition-all" title="Edit">
                                         <span class="material-symbols-outlined text-[18px]">edit</span>
                                     </button>
                                     <form method="POST" action="{{ route('trips.expenses.destroy', [$trip, $expense]) }}" onsubmit="return confirm('Delete this record?')">
@@ -221,14 +221,21 @@
                         </div>
                         <input class="input-field pl-4" name="expense_date" id="exp-date" type="date" value="{{ date('Y-m-d') }}" required>
                     </div>
-                    <select class="input-field pl-4" name="category" id="exp-category">
-                        <option value="food">Food & Drink</option>
-                        <option value="transport">Transport</option>
-                        <option value="accommodation">Accommodation</option>
-                        <option value="activity">Activity</option>
-                        <option value="shopping">Shopping</option>
-                        <option value="other">Other</option>
-                    </select>
+                    <div class="grid grid-cols-2 gap-4">
+                        <select class="input-field pl-4" name="category" id="exp-category">
+                            <option value="food">Food & Drink</option>
+                            <option value="transport">Transport</option>
+                            <option value="accommodation">Accommodation</option>
+                            <option value="activity">Activity</option>
+                            <option value="shopping">Shopping</option>
+                            <option value="other">Other</option>
+                        </select>
+                        <select class="input-field pl-4 font-body" name="paid_by" id="exp-paid-by" required>
+                            @foreach($trip->members as $member)
+                                <option value="{{ $member->id }}" {{ $member->id === Auth::id() ? 'selected' : '' }}>Paid By: {{ $member->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
                 </div>
 
                 <div class="pt-4 border-t border-surface-variant/30">
@@ -296,16 +303,26 @@
                         <input class="input-field pl-4" name="expense_date" id="edit-exp-date" type="date" required>
                     </div>
                 </div>
-                <div class="flex flex-col gap-2">
-                    <label class="font-label text-label-md text-on-surface">Category *</label>
-                    <select class="input-field pl-4" name="category" id="edit-exp-category">
-                        <option value="food">Food & Drink</option>
-                        <option value="transport">Transport</option>
-                        <option value="accommodation">Accommodation</option>
-                        <option value="activity">Activity</option>
-                        <option value="shopping">Shopping</option>
-                        <option value="other">Other</option>
-                    </select>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="flex flex-col gap-2">
+                        <label class="font-label text-label-md text-on-surface">Category *</label>
+                        <select class="input-field pl-4" name="category" id="edit-exp-category">
+                            <option value="food">Food & Drink</option>
+                            <option value="transport">Transport</option>
+                            <option value="accommodation">Accommodation</option>
+                            <option value="activity">Activity</option>
+                            <option value="shopping">Shopping</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="flex flex-col gap-2">
+                        <label class="font-label text-label-md text-on-surface">Paid By *</label>
+                        <select class="input-field pl-4" name="paid_by" id="edit-exp-paid-by" required>
+                            @foreach($trip->members as $member)
+                                <option value="{{ $member->id }}">Paid By: {{ $member->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
                 </div>
                 <div class="flex flex-col gap-2">
                     <label class="font-label text-label-md text-on-surface">Notes</label>
@@ -323,6 +340,7 @@
             document.getElementById('edit-exp-amount').value = data.amount;
             document.getElementById('edit-exp-date').value = data.expense_date;
             document.getElementById('edit-exp-category').value = data.category;
+            document.getElementById('edit-exp-paid-by').value = data.paid_by;
             document.getElementById('edit-exp-notes').value = data.notes || '';
             document.getElementById('edit-expense-modal').classList.remove('hidden');
         }
