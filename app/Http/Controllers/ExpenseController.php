@@ -17,6 +17,13 @@ class ExpenseController extends Controller
      */
     public function store(Request $request, Trip $trip)
     {
+        if ($request->input('split_method') === 'equal') {
+            $request->request->remove('splits');
+        }
+        if ($request->input('split_method') !== 'itemized') {
+            $request->request->remove('items');
+        }
+
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'amount' => ['required', 'numeric', 'min:0.01', 'max:999999999'],

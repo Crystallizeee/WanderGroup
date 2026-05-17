@@ -251,6 +251,22 @@
             </div>
         @endif
 
+        @if($errors->any())
+            <div class="mb-6 p-5 rounded-2xl bg-error/10 text-error border border-error/20 flex flex-col gap-2"
+                 x-data="{ show: true }" x-show="show" x-transition>
+                <div class="flex items-center gap-3">
+                    <span class="material-symbols-outlined text-error font-bold">error</span>
+                    <span class="font-headline text-label-md font-bold">Validation Error:</span>
+                    <button @click="show = false" class="ml-auto flex items-center justify-center w-8 h-8 rounded-full hover:bg-error/10 transition-colors"><span class="material-symbols-outlined text-[18px]">close</span></button>
+                </div>
+                <ul class="list-disc list-inside font-body text-body-md pl-4 space-y-1">
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
         {{ $slot }}
     </main>
 
