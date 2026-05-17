@@ -156,7 +156,9 @@ class ExpenseController extends Controller
      */
     public function destroy(Trip $trip, Expense $expense)
     {
-        $this->authorize('delete', $expense);
+        if ($expense->paid_by !== Auth::id() && !$trip->isOrganizer(Auth::user())) {
+            abort(403, 'You are not authorized to delete this expense.');
+        }
 
         $expense->splits()->delete();
         $expense->delete();
