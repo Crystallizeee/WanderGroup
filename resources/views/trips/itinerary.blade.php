@@ -320,7 +320,7 @@
                             <option value="restaurant">Dining</option>
                             <option value="transport">Transport</option>
                             <option value="flight">Flight</option>
-                            <option value="lodging">Lodging</option>
+                            <option value="hotel">Lodging</option>
                         </select>
                     </div>
                     <div>
