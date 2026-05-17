@@ -30,6 +30,8 @@ class ExpenseController extends Controller
             'splits.*.amount' => ['required_with:splits', 'numeric', 'min:0'],
             'items' => ['nullable', 'array'],
             'items.*.name' => ['required_with:items', 'string', 'max:255'],
+            'items.*.quantity' => ['nullable', 'integer', 'min:1'],
+            'items.*.unit_price' => ['nullable', 'numeric', 'min:0'],
             'items.*.price' => ['required_with:items', 'numeric', 'min:0'],
             'items.*.assigned_to' => ['nullable', 'exists:users,id'],
         ]);
@@ -55,6 +57,8 @@ class ExpenseController extends Controller
                 foreach ($validated['items'] as $itemData) {
                     $expense->items()->create([
                         'name' => $itemData['name'],
+                        'quantity' => $itemData['quantity'] ?? 1,
+                        'unit_price' => $itemData['unit_price'] ?? $itemData['price'],
                         'price' => $itemData['price'],
                         'assigned_to' => $itemData['assigned_to'] ?? null,
                     ]);
@@ -180,8 +184,8 @@ class ExpenseController extends Controller
             \"category\": \"salah satu dari: food, transport, accommodation, activity, shopping, other\", 
             \"date\": \"YYYY-MM-DD\",
             \"items\": [
-                {\"name\": \"nama barang pertama\", \"price\": harga_angka_saja},
-                {\"name\": \"nama barang kedua\", \"price\": harga_angka_saja}
+                {\"name\": \"nama barang pertama\", \"quantity\": jumlah_barang_angka_saja, \"unit_price\": harga_satuan_angka_saja, \"price\": total_harga_barang_angka_saja},
+                {\"name\": \"nama barang kedua\", \"quantity\": jumlah_barang_angka_saja, \"unit_price\": harga_satuan_angka_saja, \"price\": total_harga_barang_angka_saja}
             ]
         }. 
         Pastikan array 'items' berisi seluruh barang yang dibeli di struk. Hanya kembalikan string JSON saja tanpa blok markdown/backticks.";

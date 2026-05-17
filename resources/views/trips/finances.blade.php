@@ -284,24 +284,45 @@
         const tripMembers = @json($trip->members->map(function($m) { return ['id' => $m->id, 'name' => $m->name]; }));
         let itemCount = 0;
         
-        function addItemRow(name = '', price = '') {
+        function addItemRow(name = '', price = '', quantity = '', unit_price = '') {
             const list = document.getElementById('items-list');
             let options = `<option value="">Shared (Split Equally)</option>`;
             tripMembers.forEach(m => { options += `<option value="${m.id}">${m.name}</option>`; });
 
+            const qty = quantity || 1;
+            const unitPrice = unit_price || (price ? (price / qty).toFixed(2) : '');
+            const finalPrice = price || (qty * unitPrice).toFixed(2) || '';
+
             const row = document.createElement('div');
-            row.className = 'flex items-center gap-2 bg-surface p-2 rounded-xl border border-outline-variant/30';
+            row.className = 'flex flex-col sm:flex-row items-stretch sm:items-center gap-3 bg-surface-bright p-3.5 rounded-2xl border border-outline-variant/30 hover:border-primary/20 transition-all';
             row.innerHTML = `
-                <input type="text" name="items[${itemCount}][name]" value="${name}" class="input-field !py-2 !px-3 text-[12px] flex-1" placeholder="Item Name">
-                <input type="number" name="items[${itemCount}][price]" value="${price}" class="input-field !py-2 !px-3 text-[12px] w-24 text-right item-price" placeholder="Price" oninput="calculateItemizedSplits()">
-                <select name="items[${itemCount}][assigned_to]" class="input-field !py-2 !px-2 text-[12px] w-40 item-assignee" onchange="calculateItemizedSplits()">
+                <input type="text" name="items[${itemCount}][name]" value="${name}" class="input-field !py-2 !px-3.5 text-[13px] flex-grow min-w-[140px]" placeholder="Item Name" required>
+                <div class="flex items-center gap-2 bg-surface-container-low rounded-xl px-2 py-1.5 border border-outline-variant/20">
+                    <input type="number" name="items[${itemCount}][quantity]" value="${qty}" class="w-10 bg-transparent text-center focus:outline-none text-[13px] font-medium item-qty" placeholder="Qty" min="1" oninput="calculateItemRowTotal(this)">
+                    <span class="text-[10px] text-outline-variant font-bold">×</span>
+                    <input type="number" name="items[${itemCount}][unit_price]" value="${unitPrice}" class="w-20 bg-transparent text-right focus:outline-none text-[13px] font-medium item-unit-price" placeholder="Harga" oninput="calculateItemRowTotal(this)">
+                    <span class="text-[10px] text-outline-variant font-bold">=</span>
+                    <input type="number" name="items[${itemCount}][price]" value="${finalPrice}" class="w-24 bg-transparent text-right focus:outline-none text-[13px] font-bold text-primary item-price" placeholder="Total" readonly>
+                </div>
+                <select name="items[${itemCount}][assigned_to]" class="input-field !py-2 !px-2.5 text-[13px] w-full sm:w-40 item-assignee" onchange="calculateItemizedSplits()">
                     ${options}
                 </select>
-                <button type="button" onclick="this.parentElement.remove(); calculateItemizedSplits();" class="text-error hover:bg-error/10 p-1 rounded"><span class="material-symbols-outlined text-[16px]">close</span></button>
+                <button type="button" onclick="this.closest('.flex-col').remove(); calculateItemizedSplits();" class="text-error hover:bg-error/10 p-2 rounded-xl flex-shrink-0 self-end sm:self-auto transition-colors" title="Remove item">
+                    <span class="material-symbols-outlined text-[18px]">close</span>
+                </button>
             `;
             list.appendChild(row);
             itemCount++;
             document.getElementById('items-container').classList.remove('hidden');
+        }
+
+        function calculateItemRowTotal(input) {
+            const row = input.closest('.flex-col');
+            const qty = parseFloat(row.querySelector('.item-qty').value) || 0;
+            const unitPrice = parseFloat(row.querySelector('.item-unit-price').value) || 0;
+            const priceInput = row.querySelector('.item-price');
+            priceInput.value = (qty * unitPrice).toFixed(2);
+            calculateItemizedSplits();
         }
 
         function calculateItemizedSplits() {
@@ -422,7 +443,7 @@
                     itemCount = 0;
                     document.getElementById('split-method').value = 'itemized';
                     
-                    data.items.forEach(item => addItemRow(item.name, item.price));
+                    data.items.forEach(item => addItemRow(item.name, item.price, item.quantity, item.unit_price));
                     toggleSplitInputs();
                     calculateItemizedSplits();
                 }
