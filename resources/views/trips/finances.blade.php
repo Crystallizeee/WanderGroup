@@ -13,12 +13,57 @@
 
     {{-- Stats Grid (Premium Elevation) --}}
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-stack-lg">
-        <div class="card flex flex-col justify-center items-center text-center bg-white border-0 shadow-elevation-1">
-            <h3 class="font-label text-label-sm text-outline uppercase tracking-widest mb-3">Total Trip Spent</h3>
-            <div class="font-display text-display-lg text-tertiary mb-1">{{ rupiah($totalSpent) }}</div>
-            <div class="flex items-center gap-1 text-[10px] text-on-surface-variant bg-surface-variant/30 px-2 py-0.5 rounded-full">
-                <span class="material-symbols-outlined text-[12px]">analytics</span> All members
+        <div class="card flex flex-col justify-between bg-white border-0 shadow-elevation-1 p-5 min-h-[175px]">
+            <div class="text-center">
+                <h3 class="font-label text-label-sm text-outline uppercase tracking-widest mb-2">Total Trip Spent</h3>
+                <div class="font-display text-display-lg text-tertiary mb-1">{{ rupiah($totalSpent) }}</div>
             </div>
+
+            @if($trip->budget > 0)
+                @php
+                    $percentage = min(round(($totalSpent / $trip->budget) * 100), 100);
+                    $remaining = $trip->budget - $totalSpent;
+                    $isOver = $remaining < 0;
+                @endphp
+                <div class="space-y-2 mt-2 w-full">
+                    <div class="flex justify-between font-label text-[11px] uppercase tracking-tighter">
+                        <span class="font-bold text-on-surface-variant">Budget: {{ rupiah($trip->budget) }}</span>
+                        <span class="{{ $isOver ? 'text-error font-bold' : 'text-primary font-bold' }}">{{ $percentage }}%</span>
+                    </div>
+                    <div class="h-2 bg-surface-container rounded-full overflow-hidden w-full">
+                        <div class="h-full {{ $isOver ? 'bg-error' : 'bg-primary' }} transition-all duration-1000 shadow-sm" style="width: {{ $percentage }}%"></div>
+                    </div>
+                    <div class="flex justify-between items-center text-[10px] pt-1">
+                        @if($isOver)
+                            <span class="flex items-center gap-1 text-error bg-error/10 px-2 py-0.5 rounded-full font-bold">
+                                <span class="material-symbols-outlined text-[12px]">warning</span> Over Budget {{ rupiah(abs($remaining)) }}
+                            </span>
+                        @else
+                            <span class="flex items-center gap-1 text-primary bg-primary/10 px-2 py-0.5 rounded-full font-bold">
+                                <span class="material-symbols-outlined text-[12px]">check_circle</span> {{ rupiah($remaining) }} remaining
+                            </span>
+                        @endif
+                        @if($trip->created_by === Auth::id())
+                        <a href="{{ route('trips.edit', $trip) }}" class="text-outline hover:text-primary transition-colors flex items-center gap-0.5 font-bold" title="Edit Budget">
+                            <span class="material-symbols-outlined text-[12px]">edit</span> Edit
+                        </a>
+                        @endif
+                    </div>
+                </div>
+            @else
+                <div class="mt-2 pt-2 border-t border-surface-variant/30 text-center w-full">
+                    <div class="text-[11px] text-outline mb-2">No budget limit set for this trip.</div>
+                    @if($trip->created_by === Auth::id())
+                    <a href="{{ route('trips.edit', $trip) }}" class="btn-ghost !py-1 !px-3 !text-[11px] inline-flex items-center gap-1 shadow-sm border border-outline-variant/30 rounded-full hover:bg-primary/5 hover:text-primary hover:border-primary/20 transition-all font-bold">
+                        <span class="material-symbols-outlined text-[12px]">add_circle</span> Set Trip Budget
+                    </a>
+                    @else
+                    <div class="flex items-center justify-center gap-1 text-[10px] text-on-surface-variant bg-surface-variant/30 px-2 py-0.5 rounded-full inline-block">
+                        <span class="material-symbols-outlined text-[12px]">analytics</span> All members
+                    </div>
+                    @endif
+                </div>
+            @endif
         </div>
 
         <div class="card p-0 overflow-hidden bg-white border-0 shadow-elevation-1">
