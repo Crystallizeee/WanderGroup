@@ -75,6 +75,7 @@ Route::middleware(SecurityHeaders::class)->group(function () {
             // Settlements
             Route::get('/settlements', [SettlementController::class, 'index'])->name('settlements');
             Route::post('/settlements', [SettlementController::class, 'settle'])->name('settlements.settle');
+            Route::delete('/settlements/{settlement}', [SettlementController::class, 'destroy'])->name('settlements.destroy');
 
             // Voting
             Route::post('/polls', [VotingController::class, 'storePoll'])->name('polls.store');

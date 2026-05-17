@@ -81,6 +81,23 @@ class SettlementController extends Controller
     }
 
     /**
+     * Delete/cancel a settlement.
+     */
+    public function destroy(Trip $trip, Settlement $settlement)
+    {
+        // Revert relevant expense splits back to unsettled
+        $this->revertSplitsAsSettled($trip, $settlement->from_user, $settlement->to_user, $settlement->amount);
+
+        ActivityLog::log($trip->id, Auth::id(), 'deleted_settlement', Settlement::class, $settlement->id, [
+            'amount' => $settlement->amount,
+        ]);
+
+        $settlement->delete();
+
+        return back()->with('success', 'Settlement cancelled successfully!');
+    }
+
+    /**
      * Mark expense splits as settled up to the given amount.
      */
     private function markSplitsAsSettled(Trip $trip, int $fromUser, int $toUser, float $amount): void
@@ -96,6 +113,27 @@ class SettlementController extends Controller
             foreach ($expense->splits as $split) {
                 if ($remaining <= 0) break;
                 $split->update(['is_settled' => true]);
+                $remaining -= (float) $split->amount;
+            }
+        }
+    }
+
+    /**
+     * Revert expense splits back to unsettled up to the given amount.
+     */
+    private function revertSplitsAsSettled(Trip $trip, int $fromUser, int $toUser, float $amount): void
+    {
+        // Find expenses where toUser paid, and fromUser has settled splits
+        $expenses = $trip->expenses()
+            ->where('paid_by', $toUser)
+            ->with(['splits' => fn($q) => $q->where('user_id', $fromUser)->where('is_settled', true)])
+            ->get();
+
+        $remaining = $amount;
+        foreach ($expenses as $expense) {
+            foreach ($expense->splits as $split) {
+                if ($remaining <= 0) break;
+                $split->update(['is_settled' => false]);
                 $remaining -= (float) $split->amount;
             }
         }

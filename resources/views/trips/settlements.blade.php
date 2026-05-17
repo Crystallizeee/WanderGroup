@@ -127,18 +127,26 @@
         <div class="card p-0 overflow-hidden">
             @foreach($completedSettlements as $s)
             <div class="flex items-center gap-4 p-4 {{ !$loop->last ? 'border-b border-surface-variant/50' : '' }}">
-                <div class="w-10 h-10 rounded-lg bg-primary/5 flex items-center justify-center text-primary">
+                <div class="w-10 h-10 rounded-lg bg-primary/5 flex items-center justify-center text-primary shrink-0">
                     <span class="material-symbols-outlined">check_circle</span>
                 </div>
-                <div class="flex-1">
-                    <p class="font-label text-label-md text-on-surface">
+                <div class="flex-1 min-w-0">
+                    <p class="font-label text-label-md text-on-surface truncate">
                         {{ $s->payer->name }} <span class="text-outline">→</span> {{ $s->payee->name }}
                     </p>
                     <p class="font-label text-label-sm text-outline">
                         via {{ ucfirst($s->payment_method ?? 'cash') }} • {{ $s->created_at->format('M d, Y') }}
                     </p>
                 </div>
-                <div class="font-label text-label-md text-primary">{{ rupiah($s->amount) }}</div>
+                <div class="flex items-center gap-3 shrink-0">
+                    <div class="font-label text-label-md text-primary font-bold">{{ rupiah($s->amount) }}</div>
+                    <form method="POST" action="{{ route('trips.settlements.destroy', [$trip, $s]) }}" onsubmit="return confirm('Cancel and delete this settlement record? This will mark the related debts as unpaid again.')">
+                        @csrf @method('DELETE')
+                        <button type="submit" class="w-8 h-8 rounded-full flex items-center justify-center text-outline hover:bg-error/5 hover:text-error transition-all" title="Cancel/Delete">
+                            <span class="material-symbols-outlined text-[18px]">delete</span>
+                        </button>
+                    </form>
+                </div>
             </div>
             @endforeach
         </div>
