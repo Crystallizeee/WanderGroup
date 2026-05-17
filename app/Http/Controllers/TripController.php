@@ -346,6 +346,13 @@ class TripController extends Controller
             }
 
             $existingDays = $trip->itineraryDays()->orderBy('day_number')->get();
+            
+            // Move existing days to temporary unique far-future dates to avoid PostgreSQL immediate unique constraint violations
+            foreach ($existingDays as $index => $existingDay) {
+                $tempDate = \Carbon\Carbon::create(3000, 1, 1)->addDays($trip->id * 100 + $index)->toDateString();
+                $existingDay->update(['date' => $tempDate]);
+            }
+
             $newDaysCount = count($newDates);
             $existingDaysCount = $existingDays->count();
 
