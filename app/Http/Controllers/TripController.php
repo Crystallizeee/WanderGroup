@@ -450,6 +450,7 @@ class TripController extends Controller
 
         // Sum actual spent by category from expenses table
         $actualSpentQuery = $trip->expenses()
+            ->reorder()
             ->selectRaw('category, SUM(amount) as total')
             ->groupBy('category')
             ->pluck('total', 'category');
