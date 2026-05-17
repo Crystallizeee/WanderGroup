@@ -9,8 +9,8 @@
             <h1 class="font-display text-display-lg text-on-background mb-1">Budget Management</h1>
             <p class="font-body text-body-lg text-on-surface-variant">Track your planned costs versus actual spent by category.</p>
         </div>
-        <button onclick="document.getElementById('edit-categories-modal').classList.remove('hidden')" class="btn-primary shadow-lg shadow-primary/20 !h-10 !py-2 !px-4 !text-label-sm flex items-center gap-1.5 self-end">
-            <span class="material-symbols-outlined text-[18px]">edit_note</span> Manage Budgets
+        <button onclick="document.getElementById('edit-categories-modal').classList.remove('hidden')" class="btn-primary shadow-lg shadow-primary/20 !py-1.5 !px-3.5 !text-[12px] flex items-center gap-1 h-fit self-start sm:self-end">
+            <span class="material-symbols-outlined text-[16px]">edit_note</span> Manage Budgets
         </button>
     </header>
 
