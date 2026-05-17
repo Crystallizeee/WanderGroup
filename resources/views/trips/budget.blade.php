@@ -20,14 +20,17 @@
             <div class="flex flex-col gap-1 pb-4 md:pb-0">
                 <span class="font-label text-label-sm text-outline uppercase tracking-wider">Total Budget</span>
                 <span class="font-display text-[32px] text-on-background font-bold">{{ rupiah($totalBudget) }}</span>
+                <span class="text-[11px] text-on-surface-variant font-medium mt-0.5">Per Person: <span class="font-bold text-primary">{{ rupiah($totalBudget / $memberCount) }}</span></span>
             </div>
             <div class="flex flex-col gap-1 py-4 md:py-0 md:pl-6">
                 <span class="font-label text-label-sm text-outline uppercase tracking-wider">Allocated</span>
                 <span class="font-display text-[32px] text-primary font-bold">{{ rupiah($totalAllocated) }}</span>
+                <span class="text-[11px] text-on-surface-variant font-medium mt-0.5">Per Person: <span class="font-bold text-primary">{{ rupiah($totalAllocated / $memberCount) }}</span></span>
             </div>
             <div class="flex flex-col gap-1 pt-4 md:pt-0 md:pl-6">
                 <span class="font-label text-label-sm text-outline uppercase tracking-wider">Remaining</span>
                 <span class="font-display text-[32px] text-tertiary font-bold">{{ rupiah($remainingBudget) }}</span>
+                <span class="text-[11px] text-on-surface-variant font-medium mt-0.5">Per Person: <span class="font-bold text-tertiary">{{ rupiah($remainingBudget / $memberCount) }}</span></span>
             </div>
         </div>
 
@@ -65,17 +68,83 @@
                     <span class="font-headline text-label-md text-on-surface font-bold">{{ $cat['label'] }}</span>
                 </div>
 
-                <div class="space-y-1">
-                    <div class="flex justify-between text-[11px] font-label text-outline">
+                <div class="space-y-2">
+                    <div class="flex justify-between items-start text-[11px] font-label text-outline">
                         <span>Budgeted</span>
-                        <span class="font-bold text-on-surface-variant">{{ rupiah($categoryBudgets[$key] ?? 0) }}</span>
+                        <div class="text-right">
+                            <span class="font-bold text-on-surface-variant block">{{ rupiah($categoryBudgets[$key] ?? 0) }}</span>
+                            <span class="text-[9px] text-outline-variant block mt-0.5">/ person: {{ rupiah(($categoryBudgets[$key] ?? 0) / $memberCount) }}</span>
+                        </div>
                     </div>
-                    <div class="flex justify-between text-[11px] font-label text-outline">
+                    <div class="flex justify-between items-start text-[11px] font-label text-outline pt-2 border-t border-surface-variant/10">
                         <span>Actual Spent</span>
-                        <span class="font-bold {{ $cat['color'] }}">{{ rupiah($actualSpent[$key] ?? 0) }}</span>
+                        <div class="text-right">
+                            <span class="font-bold {{ $cat['color'] }} block">{{ rupiah($actualSpent[$key] ?? 0) }}</span>
+                            <span class="text-[9px] text-outline-variant block mt-0.5">/ person: {{ rupiah(($actualSpent[$key] ?? 0) / $memberCount) }}</span>
+                        </div>
                     </div>
                 </div>
             </div>
+            @endforeach
+        </div>
+    </section>
+
+    {{-- 2.5. Per Member Budget Share --}}
+    <section class="mb-stack-lg">
+        <h2 class="font-display text-headline-md text-on-background mb-4">Per Member Budget Share</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            @foreach($trip->members as $member)
+                @php
+                    $individualCap = $totalBudget / $memberCount;
+                    $individualSpent = (float) ($memberShares[$member->id] ?? 0);
+                    $memberPercentage = $individualCap > 0 ? min(round(($individualSpent / $individualCap) * 100), 100) : 0;
+                    $isOver = $individualSpent > $individualCap && $individualCap > 0;
+                @endphp
+                <div class="card p-5 bg-white border border-outline-variant/10 shadow-sm flex flex-col gap-4 hover:shadow-md transition-all">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-label-md">
+                            {{ $member->initials }}
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <h4 class="font-headline text-label-md text-on-surface truncate font-bold text-[14px]">{{ $member->name }}</h4>
+                            <p class="font-label text-[10px] text-outline uppercase tracking-wider">{{ $member->pivot->role ?? 'Member' }}</p>
+                        </div>
+                        @if($isOver)
+                            <span class="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full bg-error/10 text-error text-[10px] font-bold">
+                                <span class="material-symbols-outlined text-[12px] font-bold">warning</span> Over Cap
+                            </span>
+                        @elseif($individualSpent > 0)
+                            <span class="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full bg-success/10 text-success text-[10px] font-bold">
+                                <span class="material-symbols-outlined text-[12px] font-bold">check_circle</span> Active
+                            </span>
+                        @else
+                            <span class="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full bg-outline-variant/10 text-outline text-[10px] font-bold">
+                                <span class="material-symbols-outlined text-[12px] font-bold">circle</span> Clean
+                            </span>
+                        @endif
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2 text-[11px] font-label border-t border-b border-surface-variant/20 py-2.5">
+                        <div class="flex flex-col gap-0.5">
+                            <span class="text-outline uppercase tracking-tight">Budget Cap</span>
+                            <span class="font-bold text-on-surface">{{ rupiah($individualCap) }}</span>
+                        </div>
+                        <div class="flex flex-col gap-0.5 text-right">
+                            <span class="text-outline uppercase tracking-tight">Spent Share</span>
+                            <span class="font-bold {{ $isOver ? 'text-error' : 'text-primary' }}">{{ rupiah($individualSpent) }}</span>
+                        </div>
+                    </div>
+
+                    <div class="space-y-1">
+                        <div class="flex justify-between font-label text-[10px] text-outline uppercase tracking-wider font-bold">
+                            <span>Usage</span>
+                            <span class="{{ $isOver ? 'text-error' : 'text-primary' }}">{{ $memberPercentage }}%</span>
+                        </div>
+                        <div class="h-2 bg-surface-container rounded-full overflow-hidden w-full">
+                            <div class="h-full {{ $isOver ? 'bg-error' : 'bg-primary' }} transition-all duration-500" style="width: {{ $memberPercentage }}%"></div>
+                        </div>
+                    </div>
+                </div>
             @endforeach
         </div>
     </section>

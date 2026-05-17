@@ -469,6 +469,15 @@ class TripController extends Controller
             $trip->itineraryDays()->pluck('id')
         )->orderBy('sort_order')->get();
 
+        $memberCount = max($trip->members->count(), 1);
+
+        $memberShares = \App\Models\ExpenseSplit::join('expenses', 'expense_splits.expense_id', '=', 'expenses.id')
+            ->where('expenses.trip_id', $trip->id)
+            ->whereNull('expenses.deleted_at')
+            ->selectRaw('expense_splits.user_id, SUM(expense_splits.amount) as total')
+            ->groupBy('expense_splits.user_id')
+            ->pluck('total', 'user_id');
+
         return view('trips.budget', compact(
             'trip',
             'totalBudget',
@@ -477,7 +486,9 @@ class TripController extends Controller
             'remainingBudget',
             'utilizationPercentage',
             'actualSpent',
-            'detailedItems'
+            'detailedItems',
+            'memberCount',
+            'memberShares'
         ));
     }
 
