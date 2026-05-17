@@ -322,7 +322,7 @@ class TripController extends Controller
             'destination' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:2000'],
             'start_date' => ['required', 'date'],
-            'end_date' => ['required', 'date', 'after:start_date'],
+            'end_date' => ['required', 'date', 'after_or_equal:start_date'],
             'budget' => ['nullable', 'numeric', 'min:0', 'max:999999999999'],
             'status' => ['nullable', Rule::in(['planning', 'active', 'completed', 'cancelled'])],
             'cover_image' => ['nullable', 'image', 'max:5120'],
@@ -332,7 +332,46 @@ class TripController extends Controller
             $validated['cover_image'] = $request->file('cover_image')->store('trips/covers', 'public');
         }
 
-        $trip->update($validated);
+        DB::transaction(function () use ($trip, $validated) {
+            $trip->update($validated);
+
+            // Sync Itinerary Days
+            $startDate = \Carbon\Carbon::parse($validated['start_date']);
+            $endDate = \Carbon\Carbon::parse($validated['end_date']);
+
+            $newDates = [];
+            for ($date = $startDate->copy(); $date->lte($endDate); $date->addDay()) {
+                $newDates[] = $date->toDateString();
+            }
+
+            $existingDays = $trip->itineraryDays()->orderBy('day_number')->get();
+            $newDaysCount = count($newDates);
+            $existingDaysCount = $existingDays->count();
+
+            for ($i = 0; $i < $newDaysCount; $i++) {
+                $dateStr = $newDates[$i];
+                $dayNum = $i + 1;
+
+                if ($i < $existingDaysCount) {
+                    $existingDays[$i]->update([
+                        'date' => $dateStr,
+                        'day_number' => $dayNum,
+                    ]);
+                } else {
+                    $trip->itineraryDays()->create([
+                        'date' => $dateStr,
+                        'day_number' => $dayNum,
+                    ]);
+                }
+            }
+
+            if ($existingDaysCount > $newDaysCount) {
+                for ($i = $newDaysCount; $i < $existingDaysCount; $i++) {
+                    $existingDays[$i]->items()->delete();
+                    $existingDays[$i]->delete();
+                }
+            }
+        });
 
         ActivityLog::log($trip->id, Auth::id(), 'updated_trip', Trip::class, $trip->id, [
             'title' => $trip->title,
