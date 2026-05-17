@@ -421,4 +421,82 @@ class TripController extends Controller
 
         return back()->with('success', "{$user->name} has been removed from the trip.");
     }
+
+    /**
+     * Show budget management dashboard for a trip.
+     */
+    public function budget(Trip $trip)
+    {
+        $trip->load(['itineraryDays.items', 'expenses']);
+
+        $totalBudget = (float) ($trip->budget ?? 0);
+
+        // Get custom allocated category budgets
+        $categoryBudgets = $trip->category_budgets ?? [
+            'lodging' => 0,
+            'food' => 0,
+            'transport' => 0,
+            'activities' => 0,
+            'misc' => 0
+        ];
+
+        // Total allocated is sum of category budgets
+        $totalAllocated = (float) array_sum($categoryBudgets);
+        $remainingBudget = $totalBudget - $totalAllocated;
+        
+        $utilizationPercentage = $totalBudget > 0 
+            ? min(round(($totalAllocated / $totalBudget) * 100), 100) 
+            : 0;
+
+        // Sum actual spent by category from expenses table
+        $actualSpentQuery = $trip->expenses()
+            ->selectRaw('category, SUM(amount) as total')
+            ->groupBy('category')
+            ->pluck('total', 'category');
+
+        $actualSpent = [
+            'lodging' => (float) ($actualSpentQuery['accommodation'] ?? 0),
+            'food' => (float) ($actualSpentQuery['food'] ?? 0),
+            'transport' => (float) ($actualSpentQuery['transport'] ?? 0),
+            'activities' => (float) ($actualSpentQuery['activity'] ?? 0),
+            'misc' => (float) (($actualSpentQuery['shopping'] ?? 0) + ($actualSpentQuery['other'] ?? 0))
+        ];
+
+        // Fetch detailed itinerary items with estimated cost
+        $detailedItems = \App\Models\ItineraryItem::whereIn(
+            'itinerary_day_id',
+            $trip->itineraryDays()->pluck('id')
+        )->orderBy('sort_order')->get();
+
+        return view('trips.budget', compact(
+            'trip',
+            'totalBudget',
+            'categoryBudgets',
+            'totalAllocated',
+            'remainingBudget',
+            'utilizationPercentage',
+            'actualSpent',
+            'detailedItems'
+        ));
+    }
+
+    /**
+     * Update category budget allocations.
+     */
+    public function updateCategoryBudgets(Request $request, Trip $trip)
+    {
+        $validated = $request->validate([
+            'lodging' => ['required', 'numeric', 'min:0'],
+            'food' => ['required', 'numeric', 'min:0'],
+            'transport' => ['required', 'numeric', 'min:0'],
+            'activities' => ['required', 'numeric', 'min:0'],
+            'misc' => ['required', 'numeric', 'min:0'],
+        ]);
+
+        $trip->update([
+            'category_budgets' => $validated
+        ]);
+
+        return back()->with('success', 'Kategori budget berhasil diperbarui!');
+    }
 }

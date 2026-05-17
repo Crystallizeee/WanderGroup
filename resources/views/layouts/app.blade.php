@@ -161,6 +161,13 @@
                     </a>
                 </li>
                 <li>
+                    <a href="{{ route('trips.budget', $trip) }}"
+                       class="nav-item {{ request()->routeIs('trips.budget') ? 'nav-item-active' : 'nav-item-inactive' }}">
+                        <span class="material-symbols-outlined" @if(request()->routeIs('trips.budget')) style="font-variation-settings: 'FILL' 1;" @endif>account_balance</span>
+                        Budget
+                    </a>
+                </li>
+                <li>
                     <a href="{{ route('trips.checklist', $trip) }}"
                        class="nav-item {{ request()->routeIs('trips.checklist') ? 'nav-item-active' : 'nav-item-inactive' }}">
                         <span class="material-symbols-outlined">checklist</span>

@@ -53,6 +53,8 @@ Route::middleware(SecurityHeaders::class)->group(function () {
             Route::get('/activities', [TripController::class, 'activities'])->name('activities');
             Route::get('/itinerary', [TripController::class, 'itinerary'])->name('itinerary');
             Route::get('/finances', [TripController::class, 'finances'])->name('finances');
+            Route::get('/budget', [TripController::class, 'budget'])->name('budget');
+            Route::post('/budget/categories', [TripController::class, 'updateCategoryBudgets'])->name('budget.categories');
             Route::get('/voting', [TripController::class, 'voting'])->name('voting');
             Route::get('/checklist', [TripController::class, 'checklist'])->name('checklist');
             Route::get('/members', [TripController::class, 'members'])->name('members');

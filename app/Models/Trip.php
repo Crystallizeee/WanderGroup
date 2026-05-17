@@ -15,7 +15,7 @@ class Trip extends Model
 
     protected $fillable = [
         'title', 'destination', 'description', 'cover_image',
-        'start_date', 'end_date', 'budget', 'currency',
+        'start_date', 'end_date', 'budget', 'category_budgets', 'currency',
         'status', 'created_by', 'invite_code',
     ];
 
@@ -23,6 +23,7 @@ class Trip extends Model
         'start_date' => 'date',
         'end_date' => 'date',
         'budget' => 'decimal:2',
+        'category_budgets' => 'array',
     ];
 
     /**
