@@ -17,7 +17,7 @@
                     <a href="{{ route('dashboard') }}" class="btn-primary">Dashboard</a>
                 @else
                     <a href="{{ route('login') }}" class="text-primary font-label text-label-md hover:underline hidden md:block">Sign In</a>
-                    <a href="{{ route('register') }}" class="btn-primary">Get Started</a>
+                    <a href="{{ route('login') }}" class="btn-primary">Get Started</a>
                 @endauth
 
                 {{-- Hamburger Menu --}}
@@ -80,7 +80,7 @@
                     </p>
                 </div>
                 <div class="flex flex-col sm:flex-row gap-4 mt-8">
-                    <a href="{{ route('register') }}" class="btn-primary px-8 py-4">
+                    <a href="{{ route('login') }}" class="btn-primary px-8 py-4">
                         Get Started for Free
                         <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">arrow_forward</span>
                     </a>
@@ -276,8 +276,8 @@
                 <p class="font-body text-body-lg text-on-primary/90 max-w-2xl mx-auto">
                     Create your first trip in seconds. Invite your friends, and let WanderGroup handle the logistics.
                 </p>
-                <a href="{{ route('register') }}" class="bg-surface-container-lowest text-primary font-label text-label-md px-10 py-4 rounded-full hover:bg-surface transition-colors shadow-lg active:scale-95 duration-150 mt-4 text-[16px]">
-                    Create Free Account
+                <a href="{{ route('login') }}" class="bg-surface-container-lowest text-primary font-label text-label-md px-10 py-4 rounded-full hover:bg-surface transition-colors shadow-lg active:scale-95 duration-150 mt-4 text-[16px]">
+                    Sign In
                 </a>
             </div>
         </section>

@@ -104,10 +104,7 @@
                     </div>
                 @endif
 
-                <p class="mt-8 text-center font-body text-body-md text-on-surface-variant">
-                    Don't have an account?
-                    <a class="font-label text-label-md text-primary hover:text-surface-tint transition-colors" href="{{ route('register') }}">Sign up</a>
-                </p>
+                {{-- Registration is temporarily disabled --}}
             </div>
         </div>
     </div>
