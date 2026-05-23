@@ -61,6 +61,9 @@ class User extends Authenticatable
 
     public function getAvatarUrlAttribute(): ?string
     {
+        if ($this->avatar && (str_starts_with($this->avatar, 'http://') || str_starts_with($this->avatar, 'https://'))) {
+            return $this->avatar;
+        }
         return $this->avatar ? asset('storage/' . $this->avatar) : null;
     }
 }

@@ -16,6 +16,9 @@ return Application::configure(basePath: dirname(__DIR__))
             'trip.member' => \App\Http\Middleware\EnsureTripMember::class,
             'trip.organizer' => \App\Http\Middleware\EnsureTripOrganizer::class,
         ]);
+        $middleware->validateCsrfTokens(except: [
+            'auth/google/callback',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

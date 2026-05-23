@@ -76,6 +76,34 @@
                     </button>
                 </form>
 
+                {{-- Google Sign-In Separator & Button --}}
+                @if(config('services.google.client_id'))
+                    <div class="relative flex items-center justify-center my-6">
+                        <div class="border-t border-outline-variant/30 w-full"></div>
+                        <span class="absolute px-3 bg-surface-container-lowest text-label-md text-on-surface-variant font-body">or continue with</span>
+                        <div class="border-t border-outline-variant/30 w-full"></div>
+                    </div>
+
+                    <div class="flex flex-col items-center justify-center w-full">
+                        <div id="g_id_onload"
+                             data-client_id="{{ config('services.google.client_id') }}"
+                             data-context="signin"
+                             data-ux_mode="redirect"
+                             data-login_uri="{{ route('auth.google') }}"
+                             data-auto_prompt="false">
+                        </div>
+                        <div class="g_id_signin w-full flex justify-center"
+                             data-type="standard"
+                             data-shape="pill"
+                             data-theme="outline"
+                             data-text="signin_with"
+                             data-size="large"
+                             data-logo_alignment="left"
+                             data-width="384">
+                        </div>
+                    </div>
+                @endif
+
                 <p class="mt-8 text-center font-body text-body-md text-on-surface-variant">
                     Don't have an account?
                     <a class="font-label text-label-md text-primary hover:text-surface-tint transition-colors" href="{{ route('register') }}">Sign up</a>

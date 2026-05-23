@@ -15,6 +15,9 @@
 
     <!-- Styles & Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+    <!-- Google Identity Services -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body class="bg-background text-on-background font-body antialiased min-h-screen flex flex-col">
     {{ $slot }}
