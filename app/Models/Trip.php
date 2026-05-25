@@ -100,6 +100,11 @@ class Trip extends Model
         return $this->hasMany(Settlement::class);
     }
 
+    public function memories(): HasMany
+    {
+        return $this->hasMany(Memory::class)->orderByDesc('taken_at')->orderByDesc('created_at');
+    }
+
     // ── Scopes ──
     public function scopeActive($query)
     {

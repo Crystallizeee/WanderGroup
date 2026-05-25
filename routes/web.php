@@ -100,6 +100,13 @@ Route::middleware(SecurityHeaders::class)->group(function () {
             Route::get('/documents/{document}/download', [App\Http\Controllers\DocumentController::class, 'download'])->name('documents.download');
             Route::delete('/documents/{document}', [App\Http\Controllers\DocumentController::class, 'destroy'])->name('documents.destroy');
 
+            // Trip Memories
+            Route::get('/memories', [App\Http\Controllers\MemoryController::class, 'index'])->name('memories');
+            Route::post('/memories', [App\Http\Controllers\MemoryController::class, 'store'])->name('memories.store');
+            Route::get('/memories/{memory}/image', [App\Http\Controllers\MemoryController::class, 'serveImage'])->name('memories.image');
+            Route::post('/memories/{memory}/highlight', [App\Http\Controllers\MemoryController::class, 'toggleHighlight'])->name('memories.highlight');
+            Route::delete('/memories/{memory}', [App\Http\Controllers\MemoryController::class, 'destroy'])->name('memories.destroy');
+
             // Organizer-only routes
             Route::middleware(EnsureTripOrganizer::class)->group(function () {
                 Route::get('/edit', [TripController::class, 'edit'])->name('edit');

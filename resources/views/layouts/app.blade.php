@@ -195,6 +195,13 @@
                         Documents
                     </a>
                 </li>
+                <li>
+                    <a href="{{ route('trips.memories', $trip) }}"
+                       class="nav-item {{ request()->routeIs('trips.memories') ? 'nav-item-active' : 'nav-item-inactive' }}">
+                        <span class="material-symbols-outlined" @if(request()->routeIs('trips.memories')) style="font-variation-settings: 'FILL' 1;" @endif>photo_library</span>
+                        Memories
+                    </a>
+                </li>
                 @if($trip->isOrganizer(Auth::user()))
                 <li>
                     <a href="{{ route('trips.edit', $trip) }}"

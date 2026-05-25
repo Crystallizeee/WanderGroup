@@ -105,6 +105,7 @@
                         ['route' => 'trips.checklist', 'icon' => 'checklist', 'label' => 'Checklist', 'color' => 'primary'],
                         ['route' => 'trips.settlements', 'icon' => 'account_balance_wallet', 'label' => 'Settle Up', 'color' => 'secondary'],
                         ['route' => 'trips.documents', 'icon' => 'folder_open', 'label' => 'Documents', 'color' => 'primary'],
+                        ['route' => 'trips.memories', 'icon' => 'photo_library', 'label' => 'Memories', 'color' => 'primary'],
                         ['route' => 'trips.ai', 'icon' => 'auto_awesome', 'label' => 'WanderAI', 'color' => 'tertiary'],
                     ] as $action)
                     <a href="{{ route($action['route'], $trip) }}" class="card flex flex-col items-center text-center gap-3 hover:scale-[1.02] transition-transform cursor-pointer">

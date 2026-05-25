@@ -199,4 +199,75 @@ class TripAIService
             'type' => 'text'
         ];
     }
+
+    /**
+     * Analyze compressed vacation image to extract/verify location and generate tags.
+     */
+    public function analyzeImage($imagePath, $gpsLocation = null)
+    {
+        if (!$this->apiKey) {
+            return [
+                'location' => $gpsLocation,
+                'tags' => []
+            ];
+        }
+
+        if (!file_exists($imagePath)) {
+            return [
+                'location' => $gpsLocation,
+                'tags' => []
+            ];
+        }
+
+        $imageData = base64_encode(file_get_contents($imagePath));
+        $mimeType = mime_content_type($imagePath) ?: 'image/jpeg';
+
+        if ($gpsLocation) {
+            $prompt = "Ini foto liburan dari {$gpsLocation}. Berikan 3-5 tag kata kunci lowercase deskriptif (misal 'pantai', 'sunset', 'makanan', 'kopi'). 
+            Format JSON murni: {\"location\": \"{$gpsLocation}\", \"tags\": [\"tag1\", \"tag2\"]}. Tanpa markdown/backticks.";
+        } else {
+            $prompt = "Tebak lokasi foto liburan ini (landmark/kota/negara), isi null jika tidak terdeteksi. Berikan juga 3-5 tag kata kunci lowercase deskriptif.
+            Format JSON murni: {\"location\": \"Nama Lokasi\", \"tags\": [\"tag1\", \"tag2\"]}. Tanpa markdown/backticks.";
+        }
+
+        try {
+            $response = Http::withoutVerifying()->post("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={$this->apiKey}", [
+                'contents' => [
+                    [
+                        'parts' => [
+                            ['text' => $prompt],
+                            [
+                                'inline_data' => [
+                                    'mime_type' => $mimeType,
+                                    'data' => $imageData
+                                ]
+                            ]
+                        ]
+                    ]
+                ]
+            ]);
+
+            if ($response->successful()) {
+                $content = $response->json('candidates.0.content.parts.0.text');
+                $json = str_replace(['```json', '```'], '', $content);
+                $data = json_decode(trim($json), true);
+                
+                if ($data) {
+                    return [
+                        'location' => $data['location'] ?? $gpsLocation,
+                        'tags' => $data['tags'] ?? []
+                    ];
+                }
+            } else {
+                Log::error("Gemini Image Analysis Status Error: " . $response->status() . " - " . $response->body());
+            }
+        } catch (\Exception $e) {
+            Log::error("Gemini Image Analysis Exception: " . $e->getMessage());
+        }
+
+        return [
+            'location' => $gpsLocation,
+            'tags' => []
+        ];
+    }
 }
