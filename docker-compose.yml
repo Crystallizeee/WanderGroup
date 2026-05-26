@@ -8,7 +8,6 @@ services:
     ports:
       - "8001:80"
     volumes:
-      - .:/var/www
       - ./storage:/var/www/storage
     environment:
       - APP_ENV=local
@@ -46,7 +45,7 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     ports:
-      - "8080:8080"
+      - "8088:8080"
 
   mailpit:
     image: 'axllent/mailpit:latest'
