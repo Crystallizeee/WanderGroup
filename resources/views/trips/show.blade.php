@@ -75,7 +75,7 @@
             {{-- Stats Grid --}}
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div class="card text-center">
-                    <div class="font-headline text-headline-md text-primary">{{ $trip->memberCount() }}</div>
+                    <div class="font-headline text-headline-md text-primary">{{ $trip->members->count() }}</div>
                     <p class="font-label text-label-sm text-on-surface-variant">Members</p>
                 </div>
                 <div class="card text-center">
@@ -99,6 +99,7 @@
                 <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
                     @foreach([
                         ['route' => 'trips.itinerary', 'icon' => 'event_note', 'label' => 'Itinerary', 'color' => 'primary'],
+                        ['route' => 'trips.radar', 'icon' => 'my_location', 'label' => 'Live Radar', 'color' => 'error'],
                         ['route' => 'trips.activities', 'icon' => 'history', 'label' => 'Activity', 'color' => 'secondary'],
                         ['route' => 'trips.voting', 'icon' => 'how_to_vote', 'label' => 'Voting', 'color' => 'secondary'],
                         ['route' => 'trips.finances', 'icon' => 'payments', 'label' => 'Finances', 'color' => 'tertiary'],
@@ -144,9 +145,27 @@
                     </div>
                 </div>
 
-                <div class="bg-white/60 backdrop-blur-md rounded-2xl p-4 border border-white/50 shadow-sm relative z-10">
-                    <p class="font-body text-body-md text-on-surface leading-relaxed mb-4 italic">
-                        "Looks like a busy day! Don't forget to book <span class="text-primary font-bold">Taksi</span> for the airport transit at 08:00 AM."
+                <div class="bg-white/60 backdrop-blur-md rounded-2xl p-4 border border-white/50 shadow-sm relative z-10" id="ai-recommendation-container" x-data="{
+                    loading: true,
+                    recommendation: '',
+                    init() {
+                        fetch('{{ route('trips.ai.recommendation', $trip) }}')
+                            .then(res => res.json())
+                            .then(data => {
+                                this.recommendation = data.recommendation;
+                                this.loading = false;
+                            })
+                            .catch(err => {
+                                this.recommendation = 'Siap-siap berpetualang dan jadikan trip ini tak terlupakan!';
+                                this.loading = false;
+                            });
+                    }
+                }">
+                    <div x-show="loading" class="flex gap-2 items-center text-outline">
+                        <span class="material-symbols-outlined animate-spin text-[16px]">sync</span>
+                        <span class="font-label text-[12px]">WanderAI is thinking...</span>
+                    </div>
+                    <p x-show="!loading" x-cloak class="font-body text-body-md text-on-surface leading-relaxed mb-4 italic" x-text="recommendation">
                     </p>
                     <div class="flex gap-2">
                         <button class="flex-1 py-2 px-3 rounded-xl bg-surface-container-high text-on-surface font-label text-[11px] hover:bg-surface-container-highest transition-colors">Dismiss</button>
@@ -161,7 +180,7 @@
                 <div class="px-2 pb-1 flex justify-between items-center">
                     <div>
                         <h4 class="font-display text-label-md text-on-surface">Route Area</h4>
-                        <p class="font-body text-[11px] text-outline">{{ $trip->itineraryDays()->withCount('items')->get()->sum('items_count') }} planned locations</p>
+                        <p class="font-body text-[11px] text-outline">{{ $trip->itineraryDays->sum(fn($d) => $d->items->count()) }} planned locations</p>
                     </div>
                     <button class="w-8 h-8 rounded-lg hover:bg-surface-container-low flex items-center justify-center text-outline transition-colors">
                         <span class="material-symbols-outlined text-[20px]">open_in_full</span>

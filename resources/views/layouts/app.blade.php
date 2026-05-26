@@ -93,10 +93,12 @@
                 {{-- Notification Bell --}}
                 @if(isset($trip))
                 @php
-                    $unreadCount = \App\Models\ActivityLog::where('trip_id', $trip->id)
-                        ->where('user_id', '!=', Auth::id())
-                        ->where('created_at', '>=', now()->subDay())
-                        ->count();
+                    $unreadCount = \Illuminate\Support\Facades\Cache::remember("trip.{$trip->id}.unread." . Auth::id(), 300, function () use ($trip) {
+                        return \App\Models\ActivityLog::where('trip_id', $trip->id)
+                            ->where('user_id', '!=', Auth::id())
+                            ->where('created_at', '>=', now()->subDay())
+                            ->count();
+                    });
                 @endphp
                 <a href="{{ route('trips.activities', $trip) }}" class="relative p-2 rounded-xl hover:bg-surface-container-low transition-colors group" title="Notifications">
                     <span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors" @if($unreadCount > 0) style="font-variation-settings: 'FILL' 1;" @endif>notifications</span>

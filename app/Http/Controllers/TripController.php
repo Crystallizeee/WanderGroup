@@ -73,15 +73,14 @@ class TripController extends Controller
         } else {
             // Auto-fetch cover image from Unsplash based on destination
             try {
-                $unsplashKey = env('UNSPLASH_ACCESS_KEY');
+                $unsplashKey = config('services.unsplash.access_key');
                 if ($unsplashKey) {
-                    $response = \Illuminate\Support\Facades\Http::withoutVerifying()
-                        ->get('https://api.unsplash.com/search/photos', [
-                            'query' => $validated['destination'] . ' travel landscape',
-                            'per_page' => 1,
-                            'orientation' => 'landscape',
-                            'client_id' => $unsplashKey,
-                        ]);
+                    $response = Http::get('https://api.unsplash.com/search/photos', [
+                        'query' => $validated['destination'] . ' travel landscape',
+                        'per_page' => 1,
+                        'orientation' => 'landscape',
+                        'client_id' => $unsplashKey,
+                    ]);
                     if ($response->successful() && !empty($response->json('results'))) {
                         $validated['cover_image'] = $response->json('results.0.urls.regular');
                     }
@@ -130,14 +129,29 @@ class TripController extends Controller
             'activityLogs' => fn($q) => $q->with('user')->latest()->limit(10),
         ]);
 
-        $totalSpent = $trip->expenses()->sum('amount');
+        $totalSpent = $trip->expenses->sum('amount');
         $memberBalances = $this->calculateBalances($trip);
 
-        // Get AI recommendation for the dashboard
-        $aiService = app(\App\Services\TripAIService::class);
-        $aiRecommendation = $aiService->getSmartRecommendation($trip);
+        return view('trips.show', compact('trip', 'totalSpent', 'memberBalances'));
+    }
 
-        return view('trips.show', compact('trip', 'totalSpent', 'memberBalances', 'aiRecommendation'));
+    /**
+     * Get async AI recommendation for the dashboard
+     */
+    public function aiRecommendation(Trip $trip, \App\Services\TripAIService $aiService)
+    {
+        return response()->json([
+            'recommendation' => $aiService->getSmartRecommendation($trip)
+        ]);
+    }
+
+    /**
+     * Show Live Radar for a trip.
+     */
+    public function radar(Trip $trip)
+    {
+        $trip->load('members');
+        return view('trips.radar', compact('trip'));
     }
 
     /**
@@ -161,15 +175,13 @@ class TripController extends Controller
     {
         $trip->load(['expenses.payer', 'expenses.splits', 'members', 'settlements']);
 
-        $totalSpent = $trip->expenses()->sum('amount');
+        $totalSpent = $trip->expenses->sum('amount');
         $memberBalances = $this->calculateBalances($trip);
-        $recentExpenses = $trip->expenses()->with('payer')->latest()->limit(10)->get();
+        $recentExpenses = $trip->expenses->sortByDesc('created_at')->take(10);
 
-        $categoryBreakdown = $trip->expenses()
-            ->reorder()
-            ->selectRaw('category, SUM(amount) as total')
+        $categoryBreakdown = $trip->expenses
             ->groupBy('category')
-            ->pluck('total', 'category');
+            ->map(fn($group) => $group->sum('amount'));
 
         return view('trips.finances', compact(
             'trip', 'totalSpent', 'memberBalances', 'recentExpenses', 'categoryBreakdown'
@@ -183,8 +195,8 @@ class TripController extends Controller
     {
         $trip->load(['polls.options.votes.user', 'polls.creator', 'members']);
 
-        $activePolls = $trip->polls()->where('status', 'active')->with('options.votes')->get();
-        $closedPolls = $trip->polls()->where('status', 'closed')->with('options.votes')->get();
+        $activePolls = $trip->polls->where('status', 'active');
+        $closedPolls = $trip->polls->where('status', 'closed');
 
         return view('trips.voting', compact('trip', 'activePolls', 'closedPolls'));
     }
@@ -196,11 +208,9 @@ class TripController extends Controller
     {
         $trip->load(['checklistItems.assignee', 'checklistItems.creator', 'members']);
 
-        $items = $trip->checklistItems()
-            ->with(['assignee', 'creator'])
-            ->orderBy('category')
-            ->orderBy('is_checked')
-            ->get();
+        $items = $trip->checklistItems
+            ->sortBy('is_checked')
+            ->sortBy('category');
 
         // Split into Shared vs Personal
         $sharedItems = $items->where('is_shared', true);

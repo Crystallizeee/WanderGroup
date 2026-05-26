@@ -42,7 +42,7 @@ class AIChatController extends Controller
             \Illuminate\Support\Facades\Log::info("Context Built Successfully");
 
             // Check API Key
-            $apiKey = env('GEMINI_API_KEY');
+            $apiKey = config('services.gemini.api_key');
             if (empty($apiKey)) {
                 \Illuminate\Support\Facades\Log::error("GEMINI_API_KEY is missing in .env");
             }

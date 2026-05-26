@@ -29,12 +29,14 @@ class EnsureTripMember
 
         $user = $request->user();
 
-        if (!$trip->isMember($user)) {
+        // Single query to check membership and get role
+        $membership = $trip->members()->where('user_id', $user->id)->first();
+
+        if (!$membership) {
             abort(403, 'You are not a member of this trip.');
         }
 
         // Inject user's role in this trip into the request
-        $membership = $trip->members()->where('user_id', $user->id)->first();
         $request->merge(['trip_role' => $membership->pivot->role]);
 
         return $next($request);

@@ -36,7 +36,7 @@ class ItineraryController extends Controller
         $validated['status'] = $validated['status'] ?? 'tentative';
 
         // Auto-fetch image from Unsplash
-        if (env('UNSPLASH_ACCESS_KEY')) {
+        if (config('services.unsplash.access_key')) {
             $queries = array_filter([$validated['location'] ?? null, $validated['title'] ?? null, $trip->destination, 'nature']);
             foreach ($queries as $query) {
                 try {
@@ -109,7 +109,7 @@ class ItineraryController extends Controller
                          ($item->location !== ($validated['location'] ?? null)) || 
                          ($item->title !== ($validated['title'] ?? null));
                          
-        if (env('UNSPLASH_ACCESS_KEY') && $needsNewImage) {
+        if (config('services.unsplash.access_key') && $needsNewImage) {
             $queries = array_filter([$validated['location'] ?? null, $validated['title'] ?? null, $trip->destination, 'nature']);
             foreach ($queries as $query) {
                 try {

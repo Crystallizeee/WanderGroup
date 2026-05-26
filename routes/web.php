@@ -53,6 +53,7 @@ Route::middleware(SecurityHeaders::class)->group(function () {
             Route::get('/activities', [TripController::class, 'activities'])->name('activities');
             Route::get('/itinerary', [TripController::class, 'itinerary'])->name('itinerary');
             Route::get('/finances', [TripController::class, 'finances'])->name('finances');
+            Route::get('/radar', [TripController::class, 'radar'])->name('radar');
             Route::get('/budget', [TripController::class, 'budget'])->name('budget');
             Route::post('/budget/categories', [TripController::class, 'updateCategoryBudgets'])->name('budget.categories');
             Route::get('/voting', [TripController::class, 'voting'])->name('voting');
@@ -67,7 +68,7 @@ Route::middleware(SecurityHeaders::class)->group(function () {
             Route::post('/itinerary/{day}/notes', [ItineraryController::class, 'updateNotes'])->name('itinerary.notes');
 
             // Expenses
-            Route::post('/expenses/scan', [ExpenseController::class, 'scanReceipt'])->name('expenses.scan');
+            Route::post('/expenses/scan', [ExpenseController::class, 'scanReceipt'])->name('expenses.scan')->middleware('throttle:10,1');
             Route::post('/expenses', [ExpenseController::class, 'store'])->name('expenses.store');
             Route::put('/expenses/{expense}', [ExpenseController::class, 'update'])->name('expenses.update');
             Route::delete('/expenses/{expense}', [ExpenseController::class, 'destroy'])->name('expenses.destroy');
@@ -92,7 +93,8 @@ Route::middleware(SecurityHeaders::class)->group(function () {
 
             // WanderAI Chat
             Route::get('/ai', [AIChatController::class, 'index'])->name('ai');
-            Route::post('/ai/chat', [AIChatController::class, 'chat'])->name('ai.chat');
+            Route::post('/ai/chat', [AIChatController::class, 'chat'])->name('ai.chat')->middleware('throttle:10,1');
+            Route::get('/ai/recommendation', [TripController::class, 'aiRecommendation'])->name('ai.recommendation');
 
             // Document Vault
             Route::get('/documents', [App\Http\Controllers\DocumentController::class, 'index'])->name('documents');

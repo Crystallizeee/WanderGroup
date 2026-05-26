@@ -89,9 +89,9 @@ class ProcessMemoryImage implements ShouldQueue
 
                 if ($fileId) {
                     $client = new \Google\Client();
-                    $client->setClientId(env('GOOGLE_DRIVE_CLIENT_ID'));
-                    $client->setClientSecret(env('GOOGLE_DRIVE_CLIENT_SECRET'));
-                    $client->refreshToken(env('GOOGLE_DRIVE_REFRESH_TOKEN'));
+                    $client->setClientId(config('services.google.client_id'));
+                    $client->setClientSecret(config('services.google.client_secret'));
+                    $client->refreshToken(config('services.google.refresh_token'));
                     $client->addScope(\Google\Service\Drive::DRIVE);
                     
                     $service = new \Google\Service\Drive($client);

@@ -7,5 +7,12 @@ Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
 });
 
 Broadcast::channel('trip.{tripId}', function ($user, $tripId) {
-    return $user->trips()->where('trip_id', $tripId)->exists();
+    if ($user->trips()->where('trip_id', $tripId)->exists()) {
+        return [
+            'id' => $user->id,
+            'name' => $user->name,
+            'initials' => $user->initials,
+        ];
+    }
+    return false;
 });

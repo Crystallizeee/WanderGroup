@@ -178,7 +178,7 @@ class ExpenseController extends Controller
     {
         $request->validate(['receipt' => ['required', 'image', 'max:10240']]);
         
-        $apiKey = env('GEMINI_API_KEY');
+        $apiKey = config('services.gemini.api_key');
         if (!$apiKey) {
             return response()->json(['error' => 'AI Service not configured'], 500);
         }
