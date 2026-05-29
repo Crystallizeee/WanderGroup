@@ -91,6 +91,7 @@ class ItineraryController extends Controller
      */
     public function update(Request $request, Trip $trip, ItineraryItem $item)
     {
+        abort_unless($item->day->trip_id === $trip->id, 404);
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:2000'],
@@ -164,6 +165,7 @@ class ItineraryController extends Controller
      */
     public function destroy(Trip $trip, ItineraryItem $item)
     {
+        abort_unless($item->day->trip_id === $trip->id, 404);
         $title = $item->title;
         $dayNumber = $item->day->day_number;
 

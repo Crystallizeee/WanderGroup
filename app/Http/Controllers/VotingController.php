@@ -63,6 +63,7 @@ class VotingController extends Controller
     public function vote(Request $request, Trip $trip, PollOption $option)
     {
         $poll = $option->poll;
+        abort_unless($poll->trip_id === $trip->id, 404);
 
         // Check poll is still active
         if ($poll->status !== 'active') {
@@ -121,6 +122,7 @@ class VotingController extends Controller
      */
     public function closePoll(Request $request, Trip $trip, Poll $poll)
     {
+        abort_unless($poll->trip_id === $trip->id, 404);
         if ($poll->created_by !== Auth::id() && !$trip->isOrganizer(Auth::user())) {
             abort(403, 'Only the poll creator or trip organizer can close polls.');
         }

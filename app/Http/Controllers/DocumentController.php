@@ -121,6 +121,7 @@ class DocumentController extends Controller
      */
     public function download(Trip $trip, Document $document)
     {
+        abort_unless($document->trip_id === $trip->id, 404);
         if ($document->file_type === 'drive' || str_starts_with($document->file_path, 'http://') || str_starts_with($document->file_path, 'https://')) {
             return redirect()->away($document->file_path);
         }
@@ -137,6 +138,7 @@ class DocumentController extends Controller
      */
     public function destroy(Trip $trip, Document $document)
     {
+        abort_unless($document->trip_id === $trip->id, 404);
         if ($document->user_id !== Auth::id() && !$trip->organizers->contains(Auth::user())) {
             abort(403, 'Unauthorized action.');
         }
