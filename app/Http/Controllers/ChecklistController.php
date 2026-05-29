@@ -68,8 +68,9 @@ class ChecklistController extends Controller
             return back()->with('error', 'You can only check your own personal items.');
         }
 
+        \Log::info('Checklist Toggle Hit', ['item_id' => $item->id, 'old' => $item->is_checked]);
         $item->update(['is_checked' => !$item->is_checked]);
-
+        \Log::info('Checklist Toggle After Update', ['item_id' => $item->id, 'new' => $item->fresh()->is_checked]);
         $action = $item->is_checked ? 'checked_item' : 'unchecked_item';
         ActivityLog::log($trip->id, Auth::id(), $action, ChecklistItem::class, $item->id, [
             'title' => $item->title,

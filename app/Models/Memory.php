@@ -21,9 +21,16 @@ class Memory extends Model
     protected $casts = [
         'ai_tags' => 'array',
         'taken_at' => 'datetime',
-        'is_highlighted' => 'boolean',
         'likes_count' => 'integer',
     ];
+
+    protected function isHighlighted(): \Illuminate\Database\Eloquent\Casts\Attribute
+    {
+        return \Illuminate\Database\Eloquent\Casts\Attribute::make(
+            get: fn ($value) => in_array($value, [1, '1', true, 'true', 't', 'y', 'yes'], true),
+            set: fn ($value) => (bool) $value,
+        );
+    }
 
     public function trip()
     {

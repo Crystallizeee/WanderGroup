@@ -17,9 +17,15 @@ class Document extends Model
         'is_available_offline',
     ];
 
-    protected $casts = [
-        'is_available_offline' => 'boolean',
-    ];
+    protected $casts = [];
+
+    protected function isAvailableOffline(): \Illuminate\Database\Eloquent\Casts\Attribute
+    {
+        return \Illuminate\Database\Eloquent\Casts\Attribute::make(
+            get: fn ($value) => in_array($value, [1, '1', true, 'true', 't', 'y', 'yes'], true),
+            set: fn ($value) => (bool) $value,
+        );
+    }
 
     public function trip()
     {

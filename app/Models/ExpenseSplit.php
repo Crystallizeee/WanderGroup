@@ -14,8 +14,15 @@ class ExpenseSplit extends Model
 
     protected $casts = [
         'amount' => 'decimal:2',
-        'is_settled' => 'boolean',
     ];
+
+    protected function isSettled(): \Illuminate\Database\Eloquent\Casts\Attribute
+    {
+        return \Illuminate\Database\Eloquent\Casts\Attribute::make(
+            get: fn ($value) => in_array($value, [1, '1', true, 'true', 't', 'y', 'yes'], true),
+            set: fn ($value) => (bool) $value,
+        );
+    }
 
     public function expense(): BelongsTo
     {
