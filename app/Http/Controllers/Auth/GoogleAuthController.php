@@ -28,8 +28,7 @@ class GoogleAuthController extends Controller
 
         try {
             // Verify ID Token securely against Google's tokeninfo API
-            $response = Http::withoutVerifying()
-                ->get("https://oauth2.googleapis.com/tokeninfo", [
+            $response = Http::get("https://oauth2.googleapis.com/tokeninfo", [
                     'id_token' => $idToken
                 ]);
 

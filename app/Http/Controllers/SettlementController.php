@@ -61,23 +61,25 @@ class SettlementController extends Controller
             'payment_method' => ['nullable', 'string', 'max:50'],
         ]);
 
-        $settlement = Settlement::create([
-            'trip_id' => $trip->id,
-            'from_user' => $validated['from_user'],
-            'to_user' => $validated['to_user'],
-            'amount' => $validated['amount'],
-            'status' => 'completed',
-            'payment_method' => $validated['payment_method'] ?? 'cash',
-        ]);
+        return DB::transaction(function () use ($validated, $trip) {
+            $settlement = Settlement::create([
+                'trip_id' => $trip->id,
+                'from_user' => $validated['from_user'],
+                'to_user' => $validated['to_user'],
+                'amount' => $validated['amount'],
+                'status' => 'completed',
+                'payment_method' => $validated['payment_method'] ?? 'cash',
+            ]);
 
-        // Mark relevant expense splits as settled
-        $this->markSplitsAsSettled($trip, $validated['from_user'], $validated['to_user'], $validated['amount']);
+            // Mark relevant expense splits as settled
+            $this->markSplitsAsSettled($trip, $validated['from_user'], $validated['to_user'], $validated['amount']);
 
-        ActivityLog::log($trip->id, Auth::id(), 'settled_debt', Settlement::class, $settlement->id, [
-            'amount' => $validated['amount'],
-        ]);
+            ActivityLog::log($trip->id, Auth::id(), 'settled_debt', Settlement::class, $settlement->id, [
+                'amount' => $validated['amount'],
+            ]);
 
-        return back()->with('success', 'Payment recorded!');
+            return back()->with('success', 'Payment recorded!');
+        });
     }
 
     /**
@@ -85,16 +87,18 @@ class SettlementController extends Controller
      */
     public function destroy(Trip $trip, Settlement $settlement)
     {
-        // Revert relevant expense splits back to unsettled
-        $this->revertSplitsAsSettled($trip, $settlement->from_user, $settlement->to_user, $settlement->amount);
+        return DB::transaction(function () use ($trip, $settlement) {
+            // Revert relevant expense splits back to unsettled
+            $this->revertSplitsAsSettled($trip, $settlement->from_user, $settlement->to_user, $settlement->amount);
 
-        ActivityLog::log($trip->id, Auth::id(), 'deleted_settlement', Settlement::class, $settlement->id, [
-            'amount' => $settlement->amount,
-        ]);
+            ActivityLog::log($trip->id, Auth::id(), 'deleted_settlement', Settlement::class, $settlement->id, [
+                'amount' => $settlement->amount,
+            ]);
 
-        $settlement->delete();
+            $settlement->delete();
 
-        return back()->with('success', 'Settlement cancelled successfully!');
+            return back()->with('success', 'Settlement cancelled successfully!');
+        });
     }
 
     /**

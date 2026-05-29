@@ -46,7 +46,7 @@ Route::middleware(SecurityHeaders::class)->group(function () {
         Route::post('/trips', [TripController::class, 'store'])->name('trips.store');
 
         // Trip-scoped routes (require membership)
-        Route::middleware(EnsureTripMember::class)->prefix('trips/{trip}')->name('trips.')->group(function () {
+        Route::middleware(EnsureTripMember::class)->scopeBindings()->prefix('trips/{trip}')->name('trips.')->group(function () {
 
             // Views
             Route::get('/', [TripController::class, 'show'])->name('show');

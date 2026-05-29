@@ -4,13 +4,18 @@ namespace App\Http\Controllers;
 
 use App\Models\Trip;
 use App\Models\ActivityLog;
+use App\Services\DebtSettlementService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Validation\Rule;
 
 class TripController extends Controller
 {
+    public function __construct(
+        private DebtSettlementService $debtService
+    ) {}
     /**
      * Display user dashboard with active trips.
      */
@@ -125,12 +130,13 @@ class TripController extends Controller
             'members',
             'itineraryDays.items',
             'expenses.payer',
+            'expenses.splits',
             'polls.options.votes',
             'activityLogs' => fn($q) => $q->with('user')->latest()->limit(10),
         ]);
 
         $totalSpent = $trip->expenses->sum('amount');
-        $memberBalances = $this->calculateBalances($trip);
+        $memberBalances = $this->buildMemberBalances($trip);
 
         return view('trips.show', compact('trip', 'totalSpent', 'memberBalances'));
     }
@@ -176,7 +182,7 @@ class TripController extends Controller
         $trip->load(['expenses.payer', 'expenses.splits', 'members', 'settlements']);
 
         $totalSpent = $trip->expenses->sum('amount');
-        $memberBalances = $this->calculateBalances($trip);
+        $memberBalances = $this->buildMemberBalances($trip);
         $recentExpenses = $trip->expenses->sortByDesc('created_at')->take(10);
 
         $categoryBreakdown = $trip->expenses
@@ -259,55 +265,19 @@ class TripController extends Controller
     /**
      * Calculate debt balances and generate optimized settlement transactions.
      */
-    private function calculateBalances(Trip $trip): array
+    private function buildMemberBalances(Trip $trip): array
     {
-        $netBalances = [];
+        $netBalances = $this->debtService->calculateNetBalances($trip);
+        $settlements = $this->debtService->calculateSettlements($netBalances);
         $members = $trip->members;
 
-        foreach ($members as $member) {
-            $netBalances[$member->id] = 0;
-        }
-
-        // Calculate net balance for each member
-        foreach ($trip->expenses as $expense) {
-            $netBalances[$expense->paid_by] += (float) $expense->amount;
-            
-            foreach ($expense->splits as $split) {
-                if (!$split->is_settled) {
-                    $netBalances[$split->user_id] -= (float) $split->amount;
-                }
-            }
-        }
-
-        // Split into debtors and creditors
-        $debtors = [];
-        $creditors = [];
-        foreach ($netBalances as $userId => $amount) {
-            if ($amount < -0.01) {
-                $debtors[] = ['id' => $userId, 'amount' => abs($amount)];
-            } elseif ($amount > 0.01) {
-                $creditors[] = ['id' => $userId, 'amount' => $amount];
-            }
-        }
-
-        // Greedy Debt Minimization Algorithm
-        $transactions = [];
-        $i = 0; $j = 0;
-        while ($i < count($debtors) && $j < count($creditors)) {
-            $settleAmount = min($debtors[$i]['amount'], $creditors[$j]['amount']);
-            
-            $transactions[] = [
-                'from' => $members->find($debtors[$i]['id']),
-                'to' => $members->find($creditors[$j]['id']),
-                'amount' => $settleAmount,
+        $transactions = collect($settlements)->map(function ($s) use ($members) {
+            return [
+                'from' => $members->find($s['from']),
+                'to' => $members->find($s['to']),
+                'amount' => $s['amount'],
             ];
-
-            $debtors[$i]['amount'] -= $settleAmount;
-            $creditors[$j]['amount'] -= $settleAmount;
-
-            if ($debtors[$i]['amount'] < 0.01) $i++;
-            if ($creditors[$j]['amount'] < 0.01) $j++;
-        }
+        })->filter(fn($s) => $s['from'] && $s['to'])->values()->all();
 
         return [
             'net' => $netBalances,

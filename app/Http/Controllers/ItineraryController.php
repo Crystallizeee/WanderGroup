@@ -40,9 +40,9 @@ class ItineraryController extends Controller
             $queries = array_filter([$validated['location'] ?? null, $validated['title'] ?? null, $trip->destination, 'nature']);
             foreach ($queries as $query) {
                 try {
-                    $response = Http::withoutVerifying()->get('https://api.unsplash.com/search/photos', [
+                    $response = Http::get('https://api.unsplash.com/search/photos', [
                         'query' => $query,
-                        'client_id' => env('UNSPLASH_ACCESS_KEY'),
+                        'client_id' => config('services.unsplash.access_key'),
                         'per_page' => 1,
                         'orientation' => 'landscape',
                     ]);
@@ -113,9 +113,9 @@ class ItineraryController extends Controller
             $queries = array_filter([$validated['location'] ?? null, $validated['title'] ?? null, $trip->destination, 'nature']);
             foreach ($queries as $query) {
                 try {
-                    $response = Http::withoutVerifying()->get('https://api.unsplash.com/search/photos', [
+                    $response = Http::get('https://api.unsplash.com/search/photos', [
                         'query' => $query,
-                        'client_id' => env('UNSPLASH_ACCESS_KEY'),
+                        'client_id' => config('services.unsplash.access_key'),
                         'per_page' => 1,
                         'orientation' => 'landscape',
                     ]);

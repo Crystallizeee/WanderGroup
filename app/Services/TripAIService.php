@@ -34,9 +34,9 @@ class TripAIService
         Hanya kembalikan string JSON array tanpa format teks atau backticks.";
 
         try {
-            $response = Http::withoutVerifying()->withHeaders([
+            $response = Http::withHeaders([
                 'Content-Type' => 'application/json',
-            ])->post("https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key={$this->apiKey}", [
+            ])->post("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={$this->apiKey}", [
                 'contents' => [
                     [
                         'parts' => [
@@ -83,9 +83,9 @@ class TripAIService
         Hanya kembalikan kalimat sarannya saja, tanpa kutipan.";
 
         try {
-            $response = Http::withoutVerifying()->withHeaders([
+            $response = Http::withHeaders([
                 'Content-Type' => 'application/json',
-            ])->post("https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key={$this->apiKey}", [
+            ])->post("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={$this->apiKey}", [
                 'contents' => [
                     ['parts' => [['text' => $prompt]]]
                 ]
@@ -152,9 +152,9 @@ class TripAIService
         }";
 
         try {
-            $response = Http::withoutVerifying()->withHeaders([
+            $response = Http::withHeaders([
                 'Content-Type' => 'application/json',
-            ])->post("https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key={$this->apiKey}", [
+            ])->post("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={$this->apiKey}", [
                 'contents' => [
                     ['parts' => [['text' => $prompt]]]
                 ]
@@ -231,7 +231,7 @@ class TripAIService
         }
 
         try {
-            $response = Http::withoutVerifying()->post("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={$this->apiKey}", [
+            $response = Http::post("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={$this->apiKey}", [
                 'contents' => [
                     [
                         'parts' => [

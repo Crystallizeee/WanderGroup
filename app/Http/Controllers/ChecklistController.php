@@ -92,6 +92,13 @@ class ChecklistController extends Controller
      */
     public function destroy(Trip $trip, ChecklistItem $item)
     {
+        // Only item creator, assigned owner, or trip organizers can delete
+        $user = Auth::user();
+        $isOwnerOrCreator = $item->created_by === $user->id || $item->assigned_to === $user->id;
+        if (!$isOwnerOrCreator && !$trip->isOrganizer($user)) {
+            abort(403, 'You are not authorized to delete this item.');
+        }
+
         $title = $item->title;
         $item->delete();
 

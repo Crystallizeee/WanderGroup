@@ -76,12 +76,16 @@ class ExpenseController extends Controller
             $members = $trip->members;
             
             if ($validated['split_method'] === 'equal') {
-                $splitAmount = round($validated['amount'] / $members->count(), 2);
+                $count = $members->count();
+                $splitAmount = floor($validated['amount'] / $count * 100) / 100;
+                $remainder = round($validated['amount'] - ($splitAmount * $count), 2);
+                $i = 0;
                 foreach ($members as $member) {
+                    $i++;
                     ExpenseSplit::create([
                         'expense_id' => $expense->id,
                         'user_id' => $member->id,
-                        'amount' => $splitAmount,
+                        'amount' => $i === $count ? $splitAmount + $remainder : $splitAmount,
                     ]);
                 }
             } elseif ($validated['split_method'] === 'percentage') {
@@ -201,7 +205,7 @@ class ExpenseController extends Controller
         Pastikan array 'items' berisi seluruh barang yang dibeli di struk. Hanya kembalikan string JSON saja tanpa blok markdown/backticks.";
 
         try {
-            $response = \Illuminate\Support\Facades\Http::withoutVerifying()->post("https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key={$apiKey}", [
+            $response = \Illuminate\Support\Facades\Http::post("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={$apiKey}", [
                 'contents' => [
                     [
                         'parts' => [

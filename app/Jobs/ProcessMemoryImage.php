@@ -48,7 +48,7 @@ class ProcessMemoryImage implements ShouldQueue
                 // Nominatim requires a user-agent header
                 $response = Http::withHeaders([
                     'User-Agent' => 'WanderGroupApp/1.0 (trip-planner)'
-                ])->withoutVerifying()->get("https://nominatim.openstreetmap.org/reverse", [
+                ])->get("https://nominatim.openstreetmap.org/reverse", [
                     'format' => 'json',
                     'lat' => $this->latitude,
                     'lon' => $this->longitude,
