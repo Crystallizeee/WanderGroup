@@ -123,6 +123,7 @@ class ExpenseController extends Controller
      */
     public function update(Request $request, Trip $trip, Expense $expense)
     {
+        abort_unless($expense->trip_id === $trip->id, 404);
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'amount' => ['required', 'numeric', 'min:0.01', 'max:999999999'],
@@ -160,6 +161,7 @@ class ExpenseController extends Controller
      */
     public function destroy(Trip $trip, Expense $expense)
     {
+        abort_unless($expense->trip_id === $trip->id, 404);
         if ($expense->paid_by !== Auth::id() && !$trip->isOrganizer(Auth::user())) {
             abort(403, 'You are not authorized to delete this expense.');
         }

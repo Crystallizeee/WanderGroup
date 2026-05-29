@@ -59,6 +59,7 @@ class ChecklistController extends Controller
      */
     public function toggle(Request $request, Trip $trip, ChecklistItem $item)
     {
+        abort_unless($item->trip_id === $trip->id, 404);
         // Personal items can only be toggled by their owner
         if (!$item->is_shared && $item->assigned_to !== Auth::id()) {
             if ($request->wantsJson()) {
@@ -92,6 +93,7 @@ class ChecklistController extends Controller
      */
     public function destroy(Trip $trip, ChecklistItem $item)
     {
+        abort_unless($item->trip_id === $trip->id, 404);
         // Only item creator, assigned owner, or trip organizers can delete
         $user = Auth::user();
         $isOwnerOrCreator = $item->created_by === $user->id || $item->assigned_to === $user->id;

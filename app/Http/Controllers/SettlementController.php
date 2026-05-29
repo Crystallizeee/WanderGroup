@@ -87,6 +87,7 @@ class SettlementController extends Controller
      */
     public function destroy(Trip $trip, Settlement $settlement)
     {
+        abort_unless($settlement->trip_id === $trip->id, 404);
         return DB::transaction(function () use ($trip, $settlement) {
             // Revert relevant expense splits back to unsettled
             $this->revertSplitsAsSettled($trip, $settlement->from_user, $settlement->to_user, $settlement->amount);
