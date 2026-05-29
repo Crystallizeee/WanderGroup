@@ -19,8 +19,8 @@ class ExpenseSplit extends Model
     protected function isSettled(): \Illuminate\Database\Eloquent\Casts\Attribute
     {
         return \Illuminate\Database\Eloquent\Casts\Attribute::make(
-            get: fn ($value) => in_array($value, [1, '1', true, 'true', 't', 'y', 'yes'], true),
-            set: fn ($value) => (bool) $value,
+            get: fn ($value) => $value === 't' ? true : filter_var($value, FILTER_VALIDATE_BOOLEAN),
+            set: fn ($value) => $value === 't' ? true : filter_var($value, FILTER_VALIDATE_BOOLEAN),
         );
     }
 

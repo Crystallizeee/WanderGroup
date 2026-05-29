@@ -17,16 +17,16 @@ class ChecklistItem extends Model
     protected function isChecked(): \Illuminate\Database\Eloquent\Casts\Attribute
     {
         return \Illuminate\Database\Eloquent\Casts\Attribute::make(
-            get: fn ($value) => in_array($value, [1, '1', true, 'true', 't', 'y', 'yes'], true),
-            set: fn ($value) => (bool) $value,
+            get: fn ($value) => $value === 't' ? true : filter_var($value, FILTER_VALIDATE_BOOLEAN),
+            set: fn ($value) => $value === 't' ? true : filter_var($value, FILTER_VALIDATE_BOOLEAN),
         );
     }
 
     protected function isShared(): \Illuminate\Database\Eloquent\Casts\Attribute
     {
         return \Illuminate\Database\Eloquent\Casts\Attribute::make(
-            get: fn ($value) => in_array($value, [1, '1', true, 'true', 't', 'y', 'yes'], true),
-            set: fn ($value) => (bool) $value,
+            get: fn ($value) => $value === 't' ? true : filter_var($value, FILTER_VALIDATE_BOOLEAN),
+            set: fn ($value) => $value === 't' ? true : filter_var($value, FILTER_VALIDATE_BOOLEAN),
         );
     }
     public function trip(): BelongsTo { return $this->belongsTo(Trip::class); }
