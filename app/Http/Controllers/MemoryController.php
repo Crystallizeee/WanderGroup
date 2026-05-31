@@ -40,134 +40,141 @@ class MemoryController extends Controller
     public function store(Request $request, Trip $trip)
     {
         $request->validate([
-            'image' => ['required', 'image', 'max:12288', 'mimes:jpg,jpeg,png'], // max 12MB before compression
+            'images' => ['required', 'array'],
+            'images.*' => ['image', 'max:12288', 'mimes:jpg,jpeg,png'], // max 12MB per image
             'caption' => ['nullable', 'string', 'max:255'],
         ]);
 
-        $file = $request->file('image');
-        $extension = strtolower($file->getClientOriginalExtension());
+        $files = $request->file('images');
+        $uploadedCount = 0;
 
-        // 1. Extract EXIF data before compression/resizing
-        $takenAt = null;
-        $latitude = null;
-        $longitude = null;
+        foreach ($files as $file) {
+            $extension = strtolower($file->getClientOriginalExtension());
 
-        if (in_array($extension, ['jpg', 'jpeg'])) {
-            try {
-                $exif = @exif_read_data($file->getRealPath());
-                if ($exif) {
-                    if (isset($exif['DateTimeOriginal'])) {
-                        try {
-                            $takenAt = \Carbon\Carbon::createFromFormat('Y:m:d H:i:s', $exif['DateTimeOriginal']);
-                        } catch (\Exception $e) {
-                            $takenAt = null;
+            // 1. Extract EXIF data before compression/resizing
+            $takenAt = null;
+            $latitude = null;
+            $longitude = null;
+
+            if (in_array($extension, ['jpg', 'jpeg'])) {
+                try {
+                    $exif = @exif_read_data($file->getRealPath());
+                    if ($exif) {
+                        if (isset($exif['DateTimeOriginal'])) {
+                            try {
+                                $takenAt = \Carbon\Carbon::createFromFormat('Y:m:d H:i:s', $exif['DateTimeOriginal']);
+                            } catch (\Exception $e) {
+                                $takenAt = null;
+                            }
+                        }
+                        if (isset($exif['GPSLatitude']) && isset($exif['GPSLongitude']) && isset($exif['GPSLatitudeRef']) && isset($exif['GPSLongitudeRef'])) {
+                            $latitude = self::getGpsCoordinate($exif['GPSLatitude'], $exif['GPSLatitudeRef']);
+                            $longitude = self::getGpsCoordinate($exif['GPSLongitude'], $exif['GPSLongitudeRef']);
                         }
                     }
-                    if (isset($exif['GPSLatitude']) && isset($exif['GPSLongitude']) && isset($exif['GPSLatitudeRef']) && isset($exif['GPSLongitudeRef'])) {
-                        $latitude = self::getGpsCoordinate($exif['GPSLatitude'], $exif['GPSLatitudeRef']);
-                        $longitude = self::getGpsCoordinate($exif['GPSLongitude'], $exif['GPSLongitudeRef']);
+                } catch (\Exception $e) {
+                    // Ignore EXIF errors
+                }
+            }
+
+            // 2. Setup path & directory for local temporary compression
+            $tempDir = storage_path('app/temp');
+            if (!file_exists($tempDir)) {
+                mkdir($tempDir, 0755, true);
+            }
+
+            $filename = 'img_' . time() . '_' . Str::random(5) . '.' . $extension;
+            $destination = $tempDir . '/' . $filename;
+
+            // 3. Compress and Resize Image using GD (Target: Max 800px)
+            $compressed = false;
+            try {
+                $tempPath = $file->getRealPath();
+                $src = null;
+                if ($extension === 'jpeg' || $extension === 'jpg') {
+                    $src = @imagecreatefromjpeg($tempPath);
+                } elseif ($extension === 'png') {
+                    $src = @imagecreatefrompng($tempPath);
+                }
+
+                if ($src) {
+                    list($width, $height) = getimagesize($tempPath);
+                    $maxDim = 800; // Resize to max 800px width/height
+                    if ($width > $maxDim || $height > $maxDim) {
+                        $ratio = $width / $height;
+                        if ($ratio > 1) {
+                            $newWidth = $maxDim;
+                            $newHeight = (int)($maxDim / $ratio);
+                        } else {
+                            $newHeight = $maxDim;
+                            $newWidth = (int)($maxDim * $ratio);
+                        }
+                        $dst = imagecreatetruecolor($newWidth, $newHeight);
+                        if ($extension === 'png') {
+                            imagealphablending($dst, false);
+                            imagesavealpha($dst, true);
+                        }
+                        imagecopyresampled($dst, $src, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
+                        imagedestroy($src);
+                        $src = $dst;
                     }
+
+                    if ($extension === 'jpeg' || $extension === 'jpg') {
+                        imagejpeg($src, $destination, 75); // 75% quality for small footprint
+                        $compressed = true;
+                    } elseif ($extension === 'png') {
+                        imagepng($src, $destination, 6); // level 6 compression
+                        $compressed = true;
+                    }
+                    imagedestroy($src);
                 }
             } catch (\Exception $e) {
-                // Ignore EXIF errors
-            }
-        }
-
-        // 2. Setup path & directory for local temporary compression
-        $tempDir = storage_path('app/temp');
-        if (!file_exists($tempDir)) {
-            mkdir($tempDir, 0755, true);
-        }
-
-        $filename = 'img_' . time() . '_' . Str::random(5) . '.' . $extension;
-        $destination = $tempDir . '/' . $filename;
-
-        // 3. Compress and Resize Image using GD (Target: Max 800px)
-        $compressed = false;
-        try {
-            $tempPath = $file->getRealPath();
-            $src = null;
-            if ($extension === 'jpeg' || $extension === 'jpg') {
-                $src = @imagecreatefromjpeg($tempPath);
-            } elseif ($extension === 'png') {
-                $src = @imagecreatefrompng($tempPath);
+                // GD failed
             }
 
-            if ($src) {
-                list($width, $height) = getimagesize($tempPath);
-                $maxDim = 800; // Resize to max 800px width/height
-                if ($width > $maxDim || $height > $maxDim) {
-                    $ratio = $width / $height;
-                    if ($ratio > 1) {
-                        $newWidth = $maxDim;
-                        $newHeight = (int)($maxDim / $ratio);
-                    } else {
-                        $newHeight = $maxDim;
-                        $newWidth = (int)($maxDim * $ratio);
-                    }
-                    $dst = imagecreatetruecolor($newWidth, $newHeight);
-                    if ($extension === 'png') {
-                        imagealphablending($dst, false);
-                        imagesavealpha($dst, true);
-                    }
-                    imagecopyresampled($dst, $src, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
-                    imagedestroy($src);
-                    $src = $dst;
-                }
+            // 4. Upload to Google Drive (Under the memories subfolder!)
+            $folderName = Str::slug($trip->title) . '_' . $trip->id;
+            $driveFolder = $folderName . '/memories';
+            $drivePath = $driveFolder . '/' . $filename;
 
-                if ($extension === 'jpeg' || $extension === 'jpg') {
-                    imagejpeg($src, $destination, 75); // 75% quality for small footprint
-                    $compressed = true;
-                } elseif ($extension === 'png') {
-                    imagepng($src, $destination, 6); // level 6 compression
-                    $compressed = true;
-                }
-                imagedestroy($src);
+            if ($compressed) {
+                Storage::disk('google')->put($drivePath, file_get_contents($destination));
+                @unlink($destination); // Clean up local temporary file
+            } else {
+                // Fallback: Upload original file directly to Google Drive
+                $file->storeAs($driveFolder, $filename, 'google');
             }
-        } catch (\Exception $e) {
-            // GD failed
+
+            // Get public URL of the uploaded image
+            try {
+                $driveUrl = Storage::disk('google')->url($drivePath);
+            } catch (\Throwable $e) {
+                $driveUrl = $drivePath;
+            }
+
+            // 5. Save to Database
+            $memory = Memory::create([
+                'trip_id' => $trip->id,
+                'user_id' => Auth::id(),
+                'file_path' => $driveUrl,
+                'caption' => $request->caption,
+                'taken_at' => $takenAt ?? now(),
+                'location' => 'Menganalisis lokasi...', // Temporary loader status
+                'ai_tags' => [],
+            ]);
+
+            // 6. Dispatch background job for AI tagging & reverse geocoding
+            ProcessMemoryImage::dispatch($memory->id, $latitude, $longitude, $drivePath);
+
+            // 7. Log activity
+            ActivityLog::log($trip->id, Auth::id(), 'added_memory', Memory::class, $memory->id, [
+                'caption' => $memory->caption ?? 'foto baru',
+            ]);
+
+            $uploadedCount++;
         }
 
-        // 4. Upload to Google Drive (Under the memories subfolder!)
-        $folderName = Str::slug($trip->title) . '_' . $trip->id;
-        $driveFolder = $folderName . '/memories';
-        $drivePath = $driveFolder . '/' . $filename;
-
-        if ($compressed) {
-            Storage::disk('google')->put($drivePath, file_get_contents($destination));
-            @unlink($destination); // Clean up local temporary file
-        } else {
-            // Fallback: Upload original file directly to Google Drive
-            $file->storeAs($driveFolder, $filename, 'google');
-        }
-
-        // Get public URL of the uploaded image
-        try {
-            $driveUrl = Storage::disk('google')->url($drivePath);
-        } catch (\Throwable $e) {
-            $driveUrl = $drivePath;
-        }
-
-        // 5. Save to Database
-        $memory = Memory::create([
-            'trip_id' => $trip->id,
-            'user_id' => Auth::id(),
-            'file_path' => $driveUrl,
-            'caption' => $request->caption,
-            'taken_at' => $takenAt ?? now(),
-            'location' => 'Menganalisis lokasi...', // Temporary loader status
-            'ai_tags' => [],
-        ]);
-
-        // 6. Dispatch background job for AI tagging & reverse geocoding
-        ProcessMemoryImage::dispatch($memory->id, $latitude, $longitude, $drivePath);
-
-        // 7. Log activity
-        ActivityLog::log($trip->id, Auth::id(), 'added_memory', Memory::class, $memory->id, [
-            'caption' => $memory->caption ?? 'foto baru',
-        ]);
-
-        return redirect()->route('trips.memories', $trip)->with('success', 'Memory uploaded to Google Drive! AI is analyzing details in background.');
+        return redirect()->route('trips.memories', $trip)->with('success', "$uploadedCount memories uploaded to Google Drive! AI is analyzing details in background.");
     }
 
     /**

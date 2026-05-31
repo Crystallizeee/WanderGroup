@@ -515,37 +515,39 @@
 
             <form method="POST" action="{{ route('trips.memories.store', $trip) }}" enctype="multipart/form-data" class="space-y-4"
                   x-data="{
-                    fileName: '',
-                    previewUrl: '',
+                    files: [],
                     fileSelected(e) {
-                        const file = e.target.files[0];
-                        if (file) {
-                            this.fileName = file.name;
-                            this.previewUrl = URL.createObjectURL(file);
-                        }
+                        this.files = Array.from(e.target.files).map(file => ({
+                            name: file.name,
+                            url: URL.createObjectURL(file)
+                        }));
                     }
                   }">
                 @csrf
 
                 {{-- Drop Zone --}}
                 <div>
-                    <label class="font-label text-label-md text-on-surface block mb-2">Photo *</label>
+                    <label class="font-label text-label-md text-on-surface block mb-2">Photos *</label>
                     <div class="border-2 border-dashed border-outline-variant hover:border-primary/60 rounded-2xl relative p-6 flex flex-col items-center justify-center text-center cursor-pointer transition-all bg-surface-bright group min-h-[160px]">
-                        <input class="absolute inset-0 opacity-0 cursor-pointer w-full h-full" name="image" type="file" accept="image/jpeg,image/png,image/jpg" required @change="fileSelected">
+                        <input class="absolute inset-0 opacity-0 cursor-pointer w-full h-full" name="images[]" type="file" accept="image/jpeg,image/png,image/jpg" required multiple @change="fileSelected">
 
-                        <div x-show="!fileName" class="flex flex-col items-center gap-2">
+                        <div x-show="files.length === 0" class="flex flex-col items-center gap-2">
                             <div class="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-1 group-hover:bg-primary/20 transition-colors">
                                 <span class="material-symbols-outlined text-[28px] text-primary">add_a_photo</span>
                             </div>
-                            <span class="font-label text-label-md text-on-surface">Click or Drag Image Here</span>
-                            <span class="text-[11px] text-outline">JPEG, JPG, PNG • Max 12MB • EXIF auto-read</span>
+                            <span class="font-label text-label-md text-on-surface">Click or Drag Images Here</span>
+                            <span class="text-[11px] text-outline">JPEG, JPG, PNG • Max 12MB each • Upload multiple at once!</span>
                         </div>
 
-                        <div x-show="fileName" style="display: none;" class="w-full flex flex-col items-center gap-3">
-                            <div class="w-28 h-28 rounded-xl overflow-hidden border-2 border-primary/30 shadow-md bg-surface-dim">
-                                <img :src="previewUrl" class="w-full h-full object-cover">
+                        <div x-show="files.length > 0" style="display: none;" class="w-full flex flex-col items-center gap-3">
+                            <div class="flex flex-wrap gap-2 justify-center max-h-[160px] overflow-y-auto p-1">
+                                <template x-for="file in files">
+                                    <div class="w-16 h-16 rounded-lg overflow-hidden border border-primary/20 shadow-sm bg-surface-dim relative">
+                                        <img :src="file.url" class="w-full h-full object-cover">
+                                    </div>
+                                </template>
                             </div>
-                            <span class="font-label text-label-sm text-primary truncate max-w-xs" x-text="fileName"></span>
+                            <span class="font-label text-label-sm text-primary font-semibold" x-text="files.length + ' photo(s) selected'"></span>
                         </div>
                     </div>
                 </div>
