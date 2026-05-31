@@ -132,31 +132,38 @@ class MemoryController extends Controller
                 // GD failed
             }
 
-            // 4. Upload to Google Drive (Under the memories subfolder!)
+            // 4. Upload to Google Drive with graceful local fallback if credentials failed
             $folderName = Str::slug($trip->title) . '_' . $trip->id;
             $driveFolder = $folderName . '/memories';
             $drivePath = $driveFolder . '/' . $filename;
+            $finalPath = null;
 
-            if ($compressed) {
-                Storage::disk('google')->put($drivePath, file_get_contents($destination));
-                @unlink($destination); // Clean up local temporary file
-            } else {
-                // Fallback: Upload original file directly to Google Drive
-                $file->storeAs($driveFolder, $filename, 'google');
-            }
-
-            // Get public URL of the uploaded image
             try {
-                $driveUrl = Storage::disk('google')->url($drivePath);
+                if ($compressed) {
+                    Storage::disk('google')->put($drivePath, file_get_contents($destination));
+                    @unlink($destination); // Clean up local temporary file
+                } else {
+                    $file->storeAs($driveFolder, $filename, 'google');
+                }
+                $finalPath = Storage::disk('google')->url($drivePath);
             } catch (\Throwable $e) {
-                $driveUrl = $drivePath;
+                \Illuminate\Support\Facades\Log::error("Google Drive upload failed: " . $e->getMessage() . ". Falling back to local public storage.");
+                
+                $localFolder = 'memories/' . $folderName;
+                if ($compressed && file_exists($destination)) {
+                    Storage::disk('public')->put($localFolder . '/' . $filename, file_get_contents($destination));
+                    @unlink($destination); // Clean up local temporary file
+                } else {
+                    $file->storeAs($localFolder, $filename, 'public');
+                }
+                $finalPath = $localFolder . '/' . $filename;
             }
 
             // 5. Save to Database
             $memory = Memory::create([
                 'trip_id' => $trip->id,
                 'user_id' => Auth::id(),
-                'file_path' => $driveUrl,
+                'file_path' => $finalPath,
                 'caption' => $request->caption,
                 'taken_at' => $takenAt ?? now(),
                 'location' => 'Menganalisis lokasi...', // Temporary loader status
