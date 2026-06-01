@@ -529,7 +529,7 @@
                 <div>
                     <label class="font-label text-label-md text-on-surface block mb-2">Photos *</label>
                     <div class="border-2 border-dashed border-outline-variant hover:border-primary/60 rounded-2xl relative p-6 flex flex-col items-center justify-center text-center cursor-pointer transition-all bg-surface-bright group min-h-[160px]">
-                        <input class="absolute inset-0 opacity-0 cursor-pointer w-full h-full" name="images[]" type="file" accept="image/jpeg,image/png,image/jpg" required multiple @change="fileSelected">
+                        <input class="absolute inset-0 opacity-0 cursor-pointer w-full h-full" name="images[]" type="file" accept="image/*" required multiple @change="fileSelected">
 
                         <div x-show="files.length === 0" class="flex flex-col items-center gap-2">
                             <div class="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-1 group-hover:bg-primary/20 transition-colors">
