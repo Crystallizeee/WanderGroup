@@ -502,63 +502,90 @@
     ══════════════════════════════════════════════════ --}}
     <div id="upload-memory-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
         <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="this.parentElement.classList.add('hidden')"></div>
-        <div class="relative bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 border border-gray-100">
-            <div class="flex justify-between items-center mb-6">
+        <div class="relative bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 border border-gray-100 flex flex-col max-h-[85vh] md:max-h-[90vh]">
+            <div class="flex justify-between items-center mb-4 flex-shrink-0">
                 <div>
-                    <h3 class="text-[18px] font-bold text-gray-900">Share a Memory</h3>
-                    <p class="text-[12px] text-gray-500 mt-0.5">EXIF & AI will auto-detect location & tags</p>
+                    <h3 class="text-[18px] font-bold text-gray-900">Share memories</h3>
+                    <p class="text-[12px] text-gray-500 mt-0.5">EXIF & AI will auto-detect details</p>
                 </div>
                 <button onclick="document.getElementById('upload-memory-modal').classList.add('hidden')" class="w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center transition-colors">
                     <span class="material-symbols-outlined text-gray-400 text-[20px]">close</span>
                 </button>
             </div>
 
-            <form method="POST" action="{{ route('trips.memories.store', $trip) }}" enctype="multipart/form-data" class="space-y-4"
+            <form method="POST" action="{{ route('trips.memories.store', $trip) }}" enctype="multipart/form-data" class="flex flex-col flex-1 overflow-hidden"
                   x-data="{
                     files: [],
                     fileSelected(e) {
-                        this.files = Array.from(e.target.files).map(file => ({
+                        const rawFiles = Array.from(e.target.files);
+                        this.files = rawFiles.map((file, index) => ({
                             name: file.name,
-                            url: URL.createObjectURL(file)
+                            url: index < 12 ? URL.createObjectURL(file) : null
                         }));
                     }
                   }">
                 @csrf
 
-                {{-- Drop Zone --}}
-                <div>
-                    <label class="font-label text-label-md text-on-surface block mb-2">Photos *</label>
-                    <div class="border-2 border-dashed border-outline-variant hover:border-primary/60 rounded-2xl relative p-6 flex flex-col items-center justify-center text-center cursor-pointer transition-all bg-surface-bright group min-h-[160px]">
-                        <input class="absolute inset-0 opacity-0 cursor-pointer w-full h-full" name="images[]" type="file" accept="image/*" required multiple @change="fileSelected">
+                {{-- Scrollable Form Fields --}}
+                <div class="flex-1 overflow-y-auto space-y-4 pr-1 mb-4">
+                    {{-- Drop Zone --}}
+                    <div>
+                        <label class="font-label text-label-md text-on-surface block mb-2">Photos *</label>
+                        <div class="border-2 border-dashed border-outline-variant hover:border-primary/60 rounded-2xl relative p-6 flex flex-col items-center justify-center text-center cursor-pointer transition-all bg-surface-bright group min-h-[160px]">
+                            <input class="absolute inset-0 opacity-0 cursor-pointer w-full h-full" name="images[]" type="file" accept="image/*" required multiple @change="fileSelected">
 
-                        <div x-show="files.length === 0" class="flex flex-col items-center gap-2">
-                            <div class="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-1 group-hover:bg-primary/20 transition-colors">
-                                <span class="material-symbols-outlined text-[28px] text-primary">add_a_photo</span>
+                            <div x-show="files.length === 0" class="flex flex-col items-center gap-2">
+                                <div class="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-1 group-hover:bg-primary/20 transition-colors">
+                                    <span class="material-symbols-outlined text-[28px] text-primary">add_a_photo</span>
+                                </div>
+                                <span class="font-label text-label-md text-on-surface">Click or Drag Images Here</span>
+                                <span class="text-[11px] text-outline">JPEG, JPG, PNG • Max 12MB each • Upload multiple at once!</span>
                             </div>
-                            <span class="font-label text-label-md text-on-surface">Click or Drag Images Here</span>
-                            <span class="text-[11px] text-outline">JPEG, JPG, PNG • Max 12MB each • Upload multiple at once!</span>
-                        </div>
 
-                        <div x-show="files.length > 0" style="display: none;" class="w-full flex flex-col items-center gap-3">
-                            <div class="flex flex-wrap gap-2 justify-center max-h-[160px] overflow-y-auto p-1">
-                                <template x-for="file in files">
-                                    <div class="w-16 h-16 rounded-lg overflow-hidden border border-primary/20 shadow-sm bg-surface-dim relative">
-                                        <img :src="file.url" class="w-full h-full object-cover">
-                                    </div>
-                                </template>
+                            {{-- Grid Preview for <= 12 files --}}
+                            <div x-show="files.length > 0 && files.length <= 12" style="display: none;" class="w-full flex flex-col items-center gap-3">
+                                <div class="flex flex-wrap gap-2 justify-center p-1">
+                                    <template x-for="file in files">
+                                        <div class="w-16 h-16 rounded-lg overflow-hidden border border-primary/20 shadow-sm bg-surface-dim relative">
+                                            <img :src="file.url" class="w-full h-full object-cover">
+                                        </div>
+                                    </template>
+                                </div>
+                                <span class="font-label text-label-sm text-primary font-semibold" x-text="files.length + ' photo(s) selected'"></span>
                             </div>
-                            <span class="font-label text-label-sm text-primary font-semibold" x-text="files.length + ' photo(s) selected'"></span>
+
+                            {{-- Bento summary list for > 12 files --}}
+                            <div x-show="files.length > 12" style="display: none;" class="w-full flex flex-col items-center gap-3">
+                                <div class="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center">
+                                    <span class="material-symbols-outlined text-[32px] text-primary">folder_open</span>
+                                </div>
+                                <div class="text-center">
+                                    <span class="font-headline text-label-lg font-bold text-on-surface block" x-text="files.length + ' Photos Selected'"></span>
+                                    <span class="text-[11px] text-outline block mt-0.5">High-performance upload mode active</span>
+                                </div>
+                                {{-- Show a small list of first few file names --}}
+                                <div class="bg-surface-bright/50 border border-outline-variant/30 rounded-xl p-3 w-full max-w-xs text-left text-[11px] text-on-surface-variant font-mono space-y-1">
+                                    <template x-for="(file, index) in files.slice(0, 4)">
+                                        <div class="truncate flex items-center gap-1.5">
+                                            <span class="material-symbols-outlined text-[12px] text-outline">image</span>
+                                            <span x-text="file.name"></span>
+                                        </div>
+                                    </template>
+                                    <div class="text-outline italic text-center pt-1" x-show="files.length > 4" x-text="'+ ' + (files.length - 4) + ' more photos...'"></div>
+                                </div>
+                            </div>
                         </div>
+                    </div>
+
+                    {{-- Caption --}}
+                    <div>
+                        <label class="font-label text-label-md text-on-surface block mb-2">Caption <span class="text-outline font-normal">(Optional)</span></label>
+                        <input type="text" name="caption" class="input-field pl-4 py-2.5 w-full" placeholder="e.g. Stunning sunset from the clifftop!">
                     </div>
                 </div>
 
-                {{-- Caption --}}
-                <div>
-                    <label class="font-label text-label-md text-on-surface block mb-2">Caption <span class="text-outline font-normal">(Optional)</span></label>
-                    <input type="text" name="caption" class="input-field pl-4 py-2.5 w-full" placeholder="e.g. Stunning sunset from the clifftop!">
-                </div>
-
-                <div class="pt-4 border-t border-surface-variant/30 flex gap-3">
+                {{-- Fixed Bottom Buttons --}}
+                <div class="pt-4 border-t border-surface-variant/30 flex gap-3 flex-shrink-0">
                     <button type="button" onclick="document.getElementById('upload-memory-modal').classList.add('hidden')" class="btn-secondary flex-1">Cancel</button>
                     <button type="submit" class="btn-primary flex-1">
                         <span class="material-symbols-outlined">cloud_upload</span> Upload & Share
