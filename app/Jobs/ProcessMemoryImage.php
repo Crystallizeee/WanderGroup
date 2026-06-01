@@ -74,6 +74,15 @@ class ProcessMemoryImage implements ShouldQueue
             }
         }
 
+        // If the memory is a video, skip downloading and AI analysis completely
+        if ($memory->isVideo()) {
+            $memory->update([
+                'location' => $resolvedAddress ?? 'Lokasi tidak terdeteksi',
+                'ai_tags' => ['video'],
+            ]);
+            return;
+        }
+
         // 2. Download from Google Drive if URL is stored, otherwise fallback to local
         $tempLocalPath = null;
         $isTemporary = false;
@@ -95,6 +104,19 @@ class ProcessMemoryImage implements ShouldQueue
                     $client->addScope(\Google\Service\Drive::DRIVE);
                     
                     $service = new \Google\Service\Drive($client);
+
+                    // Check file size first to avoid OOM for huge files
+                    $metadata = $service->files->get($fileId, ['fields' => 'size']);
+                    $fileSize = $metadata->getSize();
+                    if ($fileSize > 20 * 1024 * 1024) {
+                        Log::info("Skipping Google Drive image content download for file ID {$fileId}: size is too large (" . round($fileSize / 1024 / 1024, 2) . " MB)");
+                        $memory->update([
+                            'location' => $resolvedAddress ?? 'Lokasi tidak terdeteksi',
+                            'ai_tags' => ['large file'],
+                        ]);
+                        return;
+                    }
+
                     $response = $service->files->get($fileId, ['alt' => 'media']);
                     $imageContent = $response->getBody()->getContents();
                     
@@ -106,6 +128,14 @@ class ProcessMemoryImage implements ShouldQueue
                 }
             } else {
                 $tempLocalPath = storage_path('app/public/' . $memory->file_path);
+                if (file_exists($tempLocalPath) && filesize($tempLocalPath) > 20 * 1024 * 1024) {
+                    Log::info("Skipping local image content AI processing: size is too large (" . round(filesize($tempLocalPath) / 1024 / 1024, 2) . " MB)");
+                    $memory->update([
+                        'location' => $resolvedAddress ?? 'Lokasi tidak terdeteksi',
+                        'ai_tags' => ['large file'],
+                    ]);
+                    return;
+                }
             }
         } catch (\Exception $e) {
             Log::error("Failed to read image for AI processing: " . $e->getMessage());

@@ -41,7 +41,7 @@ class MemoryController extends Controller
     {
         $request->validate([
             'images' => ['required', 'array'],
-            'images.*' => ['file', 'max:51200', 'mimes:jpg,jpeg,png,gif,mp4,mov,avi,webm,qt,quicktime'], // max 50MB per file
+            'images.*' => ['file', 'max:5242880', 'mimes:jpg,jpeg,png,gif,mp4,mov,avi,webm,qt,quicktime'], // max 5GB per file
             'caption' => ['nullable', 'string', 'max:255'],
         ]);
 

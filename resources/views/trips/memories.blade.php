@@ -569,7 +569,7 @@
                                     <span class="material-symbols-outlined text-[28px] text-primary">add_a_photo</span>
                                 </div>
                                 <span class="font-label text-label-md text-on-surface">Click or Drag Files Here</span>
-                                <span class="text-[11px] text-outline">JPEG, PNG, MP4, MOV • Max 50MB each • Upload multiple!</span>
+                                <span class="text-[11px] text-outline">JPEG, PNG, MP4, MOV • Max 5GB each • Upload multiple!</span>
                             </div>
 
                             {{-- Grid Preview for <= 12 files --}}
