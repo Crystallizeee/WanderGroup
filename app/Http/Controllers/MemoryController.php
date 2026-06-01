@@ -41,7 +41,7 @@ class MemoryController extends Controller
     {
         $request->validate([
             'images' => ['required', 'array'],
-            'images.*' => ['image', 'max:12288', 'mimes:jpg,jpeg,png'], // max 12MB per image
+            'images.*' => ['file', 'max:51200', 'mimes:jpg,jpeg,png,gif,mp4,mov,avi,webm,qt,quicktime'], // max 50MB per file
             'caption' => ['nullable', 'string', 'max:255'],
         ]);
 
@@ -50,13 +50,14 @@ class MemoryController extends Controller
 
         foreach ($files as $file) {
             $extension = strtolower($file->getClientOriginalExtension());
+            $isVideo = in_array($extension, ['mp4', 'mov', 'avi', 'webm', 'qt', 'quicktime']);
 
-            // 1. Extract EXIF data before compression/resizing
+            // 1. Extract EXIF data before compression/resizing (Images only)
             $takenAt = null;
             $latitude = null;
             $longitude = null;
 
-            if (in_array($extension, ['jpg', 'jpeg'])) {
+            if (!$isVideo && in_array($extension, ['jpg', 'jpeg'])) {
                 try {
                     $exif = @exif_read_data($file->getRealPath());
                     if ($exif) {
@@ -86,18 +87,19 @@ class MemoryController extends Controller
             $filename = 'img_' . time() . '_' . Str::random(5) . '.' . $extension;
             $destination = $tempDir . '/' . $filename;
 
-            // 3. Compress and Resize Image using GD (Target: Max 800px)
+            // 3. Compress and Resize Image using GD (Target: Max 800px) - ONLY for non-videos!
             $compressed = false;
-            try {
-                $tempPath = $file->getRealPath();
-                $src = null;
-                if ($extension === 'jpeg' || $extension === 'jpg') {
-                    $src = @imagecreatefromjpeg($tempPath);
-                } elseif ($extension === 'png') {
-                    $src = @imagecreatefrompng($tempPath);
-                }
+            if (!$isVideo) {
+                try {
+                    $tempPath = $file->getRealPath();
+                    $src = null;
+                    if ($extension === 'jpeg' || $extension === 'jpg') {
+                        $src = @imagecreatefromjpeg($tempPath);
+                    } elseif ($extension === 'png') {
+                        $src = @imagecreatefrompng($tempPath);
+                    }
 
-                if ($src) {
+                    if ($src) {
                     list($width, $height) = getimagesize($tempPath);
                     $maxDim = 800; // Resize to max 800px width/height
                     if ($width > $maxDim || $height > $maxDim) {
@@ -131,6 +133,7 @@ class MemoryController extends Controller
             } catch (\Exception $e) {
                 // GD failed
             }
+        }
 
             // 4. Upload to Google Drive with graceful local fallback if credentials failed
             $folderName = Str::slug($trip->title) . '_' . $trip->id;

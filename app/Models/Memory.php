@@ -76,4 +76,18 @@ class Memory extends Model
         // Local file: serve via proxy route
         return route('trips.memories.image', [$this->trip_id, $this->id]);
     }
+
+    /**
+     * Check if the memory file is a video.
+     */
+    public function isVideo()
+    {
+        $path = strtolower($this->file_path);
+        return str_contains($path, '.mp4') || str_contains($path, '.mov') || str_contains($path, '.avi') || str_contains($path, '.webm') || str_contains($path, 'video');
+    }
+
+    public function getIsVideoAttribute()
+    {
+        return $this->isVideo();
+    }
 }

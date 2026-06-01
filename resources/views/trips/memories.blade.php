@@ -125,6 +125,7 @@
                     'date' => $memory->taken_at ? $memory->taken_at->format('M d, Y H:i') : $memory->created_at->format('M d, Y'),
                     'tags' => $memory->ai_tags ?? [],
                     'is_highlighted' => true,
+                    'is_video' => (bool)$memory->is_video,
                     'can_delete' => $canDelete,
                     'can_highlight' => $canHighlight,
                     'delete_url' => route('trips.memories.destroy', [$trip, $memory]),
@@ -134,8 +135,19 @@
             <div class="relative rounded-2xl overflow-hidden group cursor-pointer {{ $i === 0 ? 'md:col-span-2 md:row-span-2' : '' }} aspect-video"
                  @click="openLightbox({{ $photoData }}, {{ $photoIndex }})"
                  data-memory-card='{{ $photoData }}'>
+                @if($memory->is_video)
+                <video src="{{ $memory->image_url }}" alt="{{ $memory->caption ?? 'Featured Memory' }}"
+                       class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                       muted playsinline loop preload="metadata"
+                       onmouseenter="this.play()" onmouseleave="this.pause(); this.currentTime = 0;">
+                </video>
+                <div class="absolute top-3 right-3 z-20 w-6 h-6 bg-black/50 rounded-full flex items-center justify-center shadow-lg">
+                    <span class="material-symbols-outlined text-white text-[14px]">play_arrow</span>
+                </div>
+                @else
                 <img src="{{ $memory->image_url }}" alt="{{ $memory->caption ?? 'Featured Memory' }}"
                      class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
+                @endif
                 
                 {{-- Golden Highlight Badge --}}
                 <div class="absolute top-3 left-3 flex items-center gap-1 bg-amber-500 text-white text-[11px] font-label font-bold px-2.5 py-1 rounded-full shadow-lg">
@@ -248,6 +260,7 @@
                     'date'             => $memory->taken_at ? $memory->taken_at->format('M d, Y H:i') : $memory->created_at->format('M d, Y'),
                     'tags'             => $memory->ai_tags ?? [],
                     'is_highlighted'   => (bool)$memory->is_highlighted,
+                    'is_video'         => (bool)$memory->is_video,
                     'can_delete'       => $canDelete,
                     'can_highlight'    => $canHighlight,
                     'delete_url'       => route('trips.memories.destroy', [$trip, $memory]),
@@ -274,11 +287,23 @@
                 </div>
                 @endif
 
+                @if($memory->is_video)
+                {{-- Video Thumbnail: mute, playsinline, loop, play on hover --}}
+                <video src="{{ $memory->image_url }}"
+                       class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 ease-out"
+                       muted playsinline loop preload="metadata"
+                       onmouseenter="this.play()" onmouseleave="this.pause(); this.currentTime = 0;">
+                </video>
+                <div class="absolute top-1.5 right-1.5 z-20 w-5 h-5 bg-black/50 rounded-full flex items-center justify-center shadow-md">
+                    <span class="material-symbols-outlined text-white text-[12px]">play_arrow</span>
+                </div>
+                @else
                 {{-- Photo thumbnail --}}
                 <img src="{{ $memory->image_url }}"
                      alt="{{ $memory->caption ?? 'Trip Memory' }}"
                      loading="lazy"
                      class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 ease-out">
+                @endif
 
                 {{-- Hover overlay --}}
                 <div class="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent
@@ -389,11 +414,16 @@
                 <span class="material-symbols-outlined text-[20px]">close</span>
             </button>
 
-            {{-- Left: Image --}}
+            {{-- Left: Image/Video --}}
             <div class="flex-1 bg-black flex items-center justify-center min-h-[280px] md:min-h-0 overflow-hidden">
-                <img :src="activePhoto ? activePhoto.url : ''"
-                     :alt="activePhoto ? activePhoto.caption : ''"
-                     class="max-w-full max-h-[55vh] md:max-h-[85vh] object-contain">
+                <template x-if="activePhoto && activePhoto.is_video">
+                    <video :src="activePhoto.url" controls autoplay class="max-w-full max-h-[55vh] md:max-h-[85vh] object-contain"></video>
+                </template>
+                <template x-if="activePhoto && !activePhoto.is_video">
+                    <img :src="activePhoto.url"
+                         :alt="activePhoto.caption"
+                         class="max-w-full max-h-[55vh] md:max-h-[85vh] object-contain">
+                </template>
             </div>
 
             {{-- Right: Details Sidebar --}}
@@ -530,16 +560,16 @@
                 <div class="flex-1 overflow-y-auto space-y-4 pr-1 mb-4">
                     {{-- Drop Zone --}}
                     <div>
-                        <label class="font-label text-label-md text-on-surface block mb-2">Photos *</label>
+                        <label class="font-label text-label-md text-on-surface block mb-2">Photos & Videos *</label>
                         <div class="border-2 border-dashed border-outline-variant hover:border-primary/60 rounded-2xl relative p-6 flex flex-col items-center justify-center text-center cursor-pointer transition-all bg-surface-bright group min-h-[160px]">
-                            <input class="absolute inset-0 opacity-0 cursor-pointer w-full h-full" name="images[]" type="file" accept="image/*" required multiple @change="fileSelected">
+                            <input class="absolute inset-0 opacity-0 cursor-pointer w-full h-full" name="images[]" type="file" accept="image/*,video/*" required multiple @change="fileSelected">
 
                             <div x-show="files.length === 0" class="flex flex-col items-center gap-2">
                                 <div class="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-1 group-hover:bg-primary/20 transition-colors">
                                     <span class="material-symbols-outlined text-[28px] text-primary">add_a_photo</span>
                                 </div>
-                                <span class="font-label text-label-md text-on-surface">Click or Drag Images Here</span>
-                                <span class="text-[11px] text-outline">JPEG, JPG, PNG • Max 12MB each • Upload multiple at once!</span>
+                                <span class="font-label text-label-md text-on-surface">Click or Drag Files Here</span>
+                                <span class="text-[11px] text-outline">JPEG, PNG, MP4, MOV • Max 50MB each • Upload multiple!</span>
                             </div>
 
                             {{-- Grid Preview for <= 12 files --}}
@@ -547,11 +577,16 @@
                                 <div class="flex flex-wrap gap-2 justify-center p-1">
                                     <template x-for="file in files">
                                         <div class="w-16 h-16 rounded-lg overflow-hidden border border-primary/20 shadow-sm bg-surface-dim relative">
-                                            <img :src="file.url" class="w-full h-full object-cover">
+                                            <template x-if="file.name.match(/\.(mp4|mov|avi|webm)$/i)">
+                                                <video :src="file.url" class="w-full h-full object-cover" muted playsinline></video>
+                                            </template>
+                                            <template x-if="!file.name.match(/\.(mp4|mov|avi|webm)$/i)">
+                                                <img :src="file.url" class="w-full h-full object-cover">
+                                            </template>
                                         </div>
                                     </template>
                                 </div>
-                                <span class="font-label text-label-sm text-primary font-semibold" x-text="files.length + ' photo(s) selected'"></span>
+                                <span class="font-label text-label-sm text-primary font-semibold" x-text="files.length + ' file(s) selected'"></span>
                             </div>
 
                             {{-- Bento summary list for > 12 files --}}
