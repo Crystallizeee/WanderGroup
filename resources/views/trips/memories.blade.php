@@ -647,7 +647,7 @@
                                 });
                             } catch (err) {
                                 console.error(err);
-                                self.uploadError = 'Failed to upload "' + file.name + '": ' + err.message;
+                                self.uploadError = 'Failed to upload ' + file.name + ': ' + err.message;
                                 self.isUploading = false;
                                 return;
                             }
