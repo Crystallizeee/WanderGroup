@@ -601,24 +601,25 @@
                         });
                     },
                     async submitMemoryForm(e) {
+                        const self = this;
                         e.preventDefault();
-                        if (this.files.length === 0) return;
+                        if (self.files.length === 0) return;
 
-                        this.isUploading = true;
-                        this.uploadError = '';
-                        this.currentFileIndex = 0;
-                        this.overallProgress = 0;
-                        this.progress = 0;
+                        self.isUploading = true;
+                        self.uploadError = '';
+                        self.currentFileIndex = 0;
+                        self.overallProgress = 0;
+                        self.progress = 0;
 
-                        const totalFiles = this.files.length;
-                        const caption = this.$el.querySelector('input[name=caption]').value;
-                        const csrfToken = this.$el.querySelector('input[name=_token]').value;
-                        const actionUrl = this.$el.action;
+                        const totalFiles = self.files.length;
+                        const caption = self.$el.querySelector('input[name=caption]').value;
+                        const csrfToken = self.$el.querySelector('input[name=_token]').value;
+                        const actionUrl = self.$el.action;
 
                         for (let i = 0; i < totalFiles; i++) {
-                            this.currentFileIndex = i;
-                            this.progress = 0;
-                            const file = this.files[i];
+                            self.currentFileIndex = i;
+                            self.progress = 0;
+                            const file = self.files[i];
 
                             const formData = new FormData();
                             formData.append('images[]', file);
@@ -626,20 +627,20 @@
                             formData.append('_token', csrfToken);
 
                             try {
-                                await this.uploadSingleFile(actionUrl, formData, (percent) => {
-                                    this.progress = percent;
-                                    this.overallProgress = Math.round(((i + (percent / 100)) / totalFiles) * 100);
+                                await self.uploadSingleFile(actionUrl, formData, (percent) => {
+                                    self.progress = percent;
+                                    self.overallProgress = Math.round(((i + (percent / 100)) / totalFiles) * 100);
                                 });
                             } catch (err) {
                                 console.error(err);
-                                this.uploadError = 'Failed to upload \"' + file.name + '\": ' + err.message;
-                                this.isUploading = false;
+                                self.uploadError = 'Failed to upload "' + file.name + '": ' + err.message;
+                                self.isUploading = false;
                                 return;
                             }
                         }
 
                         // Success! Refresh the memories page
-                        this.overallProgress = 100;
+                        self.overallProgress = 100;
                         window.location.reload();
                     }
                   }"
