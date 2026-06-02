@@ -546,6 +546,7 @@
             <form method="POST" action="{{ route('trips.memories.store', $trip) }}" enctype="multipart/form-data" class="relative flex flex-col flex-1 overflow-hidden"
                   x-data="{
                     files: [],
+                    previews: [],
                     isUploading: false,
                     currentFileIndex: 0,
                     progress: 0,
@@ -553,10 +554,11 @@
                     uploadError: '',
                     fileSelected(e) {
                         const rawFiles = Array.from(e.target.files);
-                        this.files = rawFiles.map((file, index) => {
-                            file.url = index < 12 ? URL.createObjectURL(file) : null;
-                            return file;
-                        });
+                        this.files = rawFiles;
+                        this.previews = rawFiles.map((file, index) => ({
+                            name: file.name,
+                            url: index < 12 ? URL.createObjectURL(file) : null
+                        }));
                     },
                     uploadSingleFile(url, formData, onProgress) {
                         return new Promise((resolve, reject) => {
@@ -641,7 +643,7 @@
                         window.location.reload();
                     }
                   }"
-                  @submit="submitMemoryForm">
+                  @submit.prevent="submitMemoryForm">
                 @csrf
 
                 {{-- Progress Overlay --}}
@@ -703,13 +705,13 @@
                             {{-- Grid Preview for <= 12 files --}}
                             <div x-show="files.length > 0 && files.length <= 12" style="display: none;" class="w-full flex flex-col items-center gap-3">
                                 <div class="flex flex-wrap gap-2 justify-center p-1">
-                                    <template x-for="file in files">
+                                    <template x-for="preview in previews">
                                         <div class="w-16 h-16 rounded-lg overflow-hidden border border-primary/20 shadow-sm bg-surface-dim relative">
-                                            <template x-if="file.name.match(/\.(mp4|mov|avi|webm)$/i)">
-                                                <video :src="file.url" class="w-full h-full object-cover" muted playsinline></video>
+                                            <template x-if="preview.name.match(/\.(mp4|mov|avi|webm)$/i)">
+                                                <video :src="preview.url" class="w-full h-full object-cover" muted playsinline></video>
                                             </template>
-                                            <template x-if="!file.name.match(/\.(mp4|mov|avi|webm)$/i)">
-                                                <img :src="file.url" class="w-full h-full object-cover">
+                                            <template x-if="!preview.name.match(/\.(mp4|mov|avi|webm)$/i)">
+                                                <img :src="preview.url" class="w-full h-full object-cover">
                                             </template>
                                         </div>
                                     </template>
