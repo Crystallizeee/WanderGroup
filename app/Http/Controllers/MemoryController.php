@@ -45,7 +45,7 @@ class MemoryController extends Controller
             'caption' => ['nullable', 'string', 'max:255'],
         ]);
 
-        $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'heic', 'heif', 'mp4', 'mov', 'avi', 'webm', 'qt', 'quicktime'];
+        $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'heic', 'heif', 'mp4', 'mov', 'avi', 'webm', 'qt', 'quicktime'];
         $files = $request->file('images');
 
         foreach ($files as $file) {
