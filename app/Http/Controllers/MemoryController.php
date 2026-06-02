@@ -78,62 +78,7 @@ class MemoryController extends Controller
                 }
             }
 
-            // 2. Setup path & directory for local temporary compression
-            $tempDir = storage_path('app/temp');
-            if (!file_exists($tempDir)) {
-                mkdir($tempDir, 0755, true);
-            }
-
             $filename = 'img_' . time() . '_' . Str::random(5) . '.' . $extension;
-            $destination = $tempDir . '/' . $filename;
-
-            // 3. Compress and Resize Image using GD (Target: Max 800px) - ONLY for non-videos!
-            $compressed = false;
-            if (!$isVideo) {
-                try {
-                    $tempPath = $file->getRealPath();
-                    $src = null;
-                    if ($extension === 'jpeg' || $extension === 'jpg') {
-                        $src = @imagecreatefromjpeg($tempPath);
-                    } elseif ($extension === 'png') {
-                        $src = @imagecreatefrompng($tempPath);
-                    }
-
-                    if ($src) {
-                    list($width, $height) = getimagesize($tempPath);
-                    $maxDim = 800; // Resize to max 800px width/height
-                    if ($width > $maxDim || $height > $maxDim) {
-                        $ratio = $width / $height;
-                        if ($ratio > 1) {
-                            $newWidth = $maxDim;
-                            $newHeight = (int)($maxDim / $ratio);
-                        } else {
-                            $newHeight = $maxDim;
-                            $newWidth = (int)($maxDim * $ratio);
-                        }
-                        $dst = imagecreatetruecolor($newWidth, $newHeight);
-                        if ($extension === 'png') {
-                            imagealphablending($dst, false);
-                            imagesavealpha($dst, true);
-                        }
-                        imagecopyresampled($dst, $src, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
-                        imagedestroy($src);
-                        $src = $dst;
-                    }
-
-                    if ($extension === 'jpeg' || $extension === 'jpg') {
-                        imagejpeg($src, $destination, 75); // 75% quality for small footprint
-                        $compressed = true;
-                    } elseif ($extension === 'png') {
-                        imagepng($src, $destination, 6); // level 6 compression
-                        $compressed = true;
-                    }
-                    imagedestroy($src);
-                }
-            } catch (\Exception $e) {
-                // GD failed
-            }
-        }
 
             // 4. Upload to Google Drive with graceful local fallback if credentials failed
             $folderName = Str::slug($trip->title) . '_' . $trip->id;
@@ -142,23 +87,13 @@ class MemoryController extends Controller
             $finalPath = null;
 
             try {
-                if ($compressed) {
-                    Storage::disk('google')->put($drivePath, file_get_contents($destination));
-                    @unlink($destination); // Clean up local temporary file
-                } else {
-                    $file->storeAs($driveFolder, $filename, 'google');
-                }
+                $file->storeAs($driveFolder, $filename, 'google');
                 $finalPath = Storage::disk('google')->url($drivePath);
             } catch (\Throwable $e) {
                 \Illuminate\Support\Facades\Log::error("Google Drive upload failed: " . $e->getMessage() . ". Falling back to local public storage.");
                 
                 $localFolder = 'memories/' . $folderName;
-                if ($compressed && file_exists($destination)) {
-                    Storage::disk('public')->put($localFolder . '/' . $filename, file_get_contents($destination));
-                    @unlink($destination); // Clean up local temporary file
-                } else {
-                    $file->storeAs($localFolder, $filename, 'public');
-                }
+                $file->storeAs($localFolder, $filename, 'public');
                 $finalPath = $localFolder . '/' . $filename;
             }
 
