@@ -553,12 +553,23 @@
                     overallProgress: 0,
                     uploadError: '',
                     fileSelected(e) {
+                        if (!e.target || !e.target.files) return;
                         const rawFiles = Array.from(e.target.files);
                         this.files = rawFiles;
-                        this.previews = rawFiles.map((file, index) => ({
-                            name: file.name,
-                            url: index < 12 ? URL.createObjectURL(file) : null
-                        }));
+                        this.previews = rawFiles.map((file, index) => {
+                            let url = null;
+                            if (index < 12) {
+                                try {
+                                    url = URL.createObjectURL(file);
+                                } catch (err) {
+                                    console.error('Failed to create object URL for:', file.name, err);
+                                }
+                            }
+                            return {
+                                name: file.name,
+                                url: url
+                            };
+                        });
                     },
                     uploadSingleFile(url, formData, onProgress) {
                         return new Promise((resolve, reject) => {
@@ -603,7 +614,10 @@
                     async submitMemoryForm(e) {
                         const self = this;
                         e.preventDefault();
-                        if (self.files.length === 0) return;
+                        if (self.files.length === 0) {
+                            alert('Please select at least one photo or video to upload.');
+                            return;
+                        }
 
                         self.isUploading = true;
                         self.uploadError = '';
@@ -693,7 +707,7 @@
                     <div>
                         <label class="font-label text-label-md text-on-surface block mb-2">Photos & Videos *</label>
                         <div class="border-2 border-dashed border-outline-variant hover:border-primary/60 rounded-2xl relative p-6 flex flex-col items-center justify-center text-center cursor-pointer transition-all bg-surface-bright group min-h-[160px]">
-                            <input class="absolute inset-0 opacity-0 cursor-pointer w-full h-full" name="images[]" type="file" accept="image/*,video/*" required multiple @change="fileSelected">
+                            <input class="absolute inset-0 opacity-0 cursor-pointer w-full h-full" name="images[]" type="file" accept="image/*,video/*" multiple @change="fileSelected">
 
                             <div x-show="files.length === 0" class="flex flex-col items-center gap-2">
                                 <div class="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-1 group-hover:bg-primary/20 transition-colors">
