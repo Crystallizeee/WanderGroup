@@ -184,6 +184,14 @@ class MemoryController extends Controller
             $uploadedCount++;
         }
 
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => "$uploadedCount memories uploaded successfully!",
+                'count' => $uploadedCount,
+            ]);
+        }
+
         return redirect()->route('trips.memories', $trip)->with('success', "$uploadedCount memories uploaded to Google Drive! AI is analyzing details in background.");
     }
 

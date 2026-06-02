@@ -543,18 +543,146 @@
                 </button>
             </div>
 
-            <form method="POST" action="{{ route('trips.memories.store', $trip) }}" enctype="multipart/form-data" class="flex flex-col flex-1 overflow-hidden"
+            <form method="POST" action="{{ route('trips.memories.store', $trip) }}" enctype="multipart/form-data" class="relative flex flex-col flex-1 overflow-hidden"
                   x-data="{
                     files: [],
+                    isUploading: false,
+                    currentFileIndex: 0,
+                    progress: 0,
+                    overallProgress: 0,
+                    uploadError: '',
                     fileSelected(e) {
                         const rawFiles = Array.from(e.target.files);
-                        this.files = rawFiles.map((file, index) => ({
-                            name: file.name,
-                            url: index < 12 ? URL.createObjectURL(file) : null
-                        }));
+                        this.files = rawFiles.map((file, index) => {
+                            file.url = index < 12 ? URL.createObjectURL(file) : null;
+                            return file;
+                        });
+                    },
+                    uploadSingleFile(url, formData, onProgress) {
+                        return new Promise((resolve, reject) => {
+                            const xhr = new XMLHttpRequest();
+                            xhr.open('POST', url, true);
+                            xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+                            xhr.setRequestHeader('Accept', 'application/json');
+
+                            xhr.upload.addEventListener('progress', (e) => {
+                                if (e.lengthComputable) {
+                                    const percent = Math.round((e.loaded / e.total) * 100);
+                                    onProgress(percent);
+                                }
+                            });
+
+                            xhr.onload = () => {
+                                if (xhr.status >= 200 && xhr.status < 300) {
+                                    try {
+                                        const res = JSON.parse(xhr.responseText);
+                                        if (res.success) {
+                                            resolve(res);
+                                        } else {
+                                            reject(new Error(res.message || 'Upload failed'));
+                                        }
+                                    } catch (err) {
+                                        reject(new Error('Invalid response from server'));
+                                    }
+                                } else {
+                                    let errMsg = 'Server error';
+                                    try {
+                                        const res = JSON.parse(xhr.responseText);
+                                        errMsg = res.message || errMsg;
+                                    } catch (e) {}
+                                    reject(new Error(errMsg + ' (' + xhr.status + ')'));
+                                }
+                            };
+
+                            xhr.onerror = () => reject(new Error('Network error or connection lost'));
+                            xhr.send(formData);
+                        });
+                    },
+                    async submitMemoryForm(e) {
+                        e.preventDefault();
+                        if (this.files.length === 0) return;
+
+                        this.isUploading = true;
+                        this.uploadError = '';
+                        this.currentFileIndex = 0;
+                        this.overallProgress = 0;
+                        this.progress = 0;
+
+                        const totalFiles = this.files.length;
+                        const caption = this.$el.querySelector('input[name=caption]').value;
+                        const csrfToken = this.$el.querySelector('input[name=_token]').value;
+                        const actionUrl = this.$el.action;
+
+                        for (let i = 0; i < totalFiles; i++) {
+                            this.currentFileIndex = i;
+                            this.progress = 0;
+                            const file = this.files[i];
+
+                            const formData = new FormData();
+                            formData.append('images[]', file);
+                            formData.append('caption', caption);
+                            formData.append('_token', csrfToken);
+
+                            try {
+                                await this.uploadSingleFile(actionUrl, formData, (percent) => {
+                                    this.progress = percent;
+                                    this.overallProgress = Math.round(((i + (percent / 100)) / totalFiles) * 100);
+                                });
+                            } catch (err) {
+                                console.error(err);
+                                this.uploadError = 'Failed to upload \"' + file.name + '\": ' + err.message;
+                                this.isUploading = false;
+                                return;
+                            }
+                        }
+
+                        // Success! Refresh the memories page
+                        this.overallProgress = 100;
+                        window.location.reload();
                     }
-                  }">
+                  }"
+                  @submit="submitMemoryForm">
                 @csrf
+
+                {{-- Progress Overlay --}}
+                <div x-show="isUploading" style="display: none;" class="absolute inset-0 bg-white/95 backdrop-blur-md z-30 flex flex-col items-center justify-center p-6 text-center select-none">
+                    <div class="relative w-20 h-20 mb-6">
+                        <div class="absolute inset-0 rounded-full border-4 border-primary/10"></div>
+                        <div class="absolute inset-0 rounded-full border-4 border-transparent border-t-primary animate-spin" style="animation-duration: 1s;"></div>
+                        <div class="absolute inset-2 rounded-full bg-primary/5 flex items-center justify-center">
+                            <span class="material-symbols-outlined text-[32px] text-primary animate-pulse">cloud_upload</span>
+                        </div>
+                    </div>
+
+                    <h4 class="font-headline text-[18px] font-bold text-gray-900 mb-1">Uploading Memories</h4>
+                    <p class="text-[13px] text-gray-500 mb-6" x-text="'Processing ' + (currentFileIndex + 1) + ' of ' + files.length"></p>
+
+                    <div class="w-full max-w-xs bg-gray-100 border border-gray-200/50 h-3 rounded-full overflow-hidden mb-2 relative shadow-inner">
+                        <div class="bg-gradient-to-r from-primary to-secondary h-full transition-all duration-300 rounded-full" :style="'width: ' + overallProgress + '%'"></div>
+                    </div>
+                    
+                    <div class="flex justify-between w-full max-w-xs text-[11px] font-semibold text-gray-500 mb-6">
+                        <span x-text="overallProgress + '% Total'"></span>
+                        <span x-text="'Active: ' + progress + '%'"></span>
+                    </div>
+
+                    <div class="w-full max-w-xs truncate font-mono text-[11px] text-gray-600 bg-gray-50 border border-gray-200/40 rounded-xl px-3 py-2 flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+                        <span class="truncate" x-text="files[currentFileIndex]?.name"></span>
+                    </div>
+                </div>
+
+                {{-- Error State --}}
+                <div x-show="uploadError" style="display: none;" class="absolute inset-0 bg-white z-30 flex flex-col items-center justify-center p-6 text-center">
+                    <div class="w-16 h-16 rounded-full bg-red-50 text-red-600 flex items-center justify-center mb-4">
+                        <span class="material-symbols-outlined text-[32px]">warning</span>
+                    </div>
+                    <h4 class="font-headline text-[18px] font-bold text-gray-900 mb-2">Upload Failed</h4>
+                    <p class="text-xs text-red-600 max-w-xs mb-6 overflow-y-auto max-h-32 font-mono bg-red-50/50 p-3 rounded-xl border border-red-100" x-text="uploadError"></p>
+                    <button type="button" @click="uploadError = ''; isUploading = false" class="btn-primary w-full max-w-xs">
+                        <span class="material-symbols-outlined">restart_alt</span> Try Again
+                    </button>
+                </div>
 
                 {{-- Scrollable Form Fields --}}
                 <div class="flex-1 overflow-y-auto space-y-4 pr-1 mb-4">
