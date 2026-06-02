@@ -41,11 +41,23 @@ class MemoryController extends Controller
     {
         $request->validate([
             'images' => ['required', 'array'],
-            'images.*' => ['file', 'max:5242880', 'mimes:jpg,jpeg,png,gif,heic,heif,mp4,mov,avi,webm,qt,quicktime'], // max 5GB per file
+            'images.*' => ['file', 'max:5242880'], // max 5GB per file
             'caption' => ['nullable', 'string', 'max:255'],
         ]);
 
+        $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'heic', 'heif', 'mp4', 'mov', 'avi', 'webm', 'qt', 'quicktime'];
         $files = $request->file('images');
+
+        foreach ($files as $file) {
+            $extension = strtolower($file->getClientOriginalExtension());
+            if (!in_array($extension, $allowedExtensions)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'The file "' . $file->getClientOriginalName() . '" must be a file of type: ' . implode(', ', $allowedExtensions) . '.'
+                ], 422);
+            }
+        }
+
         $uploadedCount = 0;
 
         foreach ($files as $file) {
