@@ -536,7 +536,7 @@
             <div class="flex justify-between items-center mb-4 flex-shrink-0">
                 <div>
                     <h3 class="text-[18px] font-bold text-gray-900">Share memories</h3>
-                    <p class="text-[12px] text-gray-500 mt-0.5">EXIF & AI will auto-detect details</p>
+                    <p class="text-[12px] text-gray-500 mt-0.5">EXIF & GPS will auto-detect details</p>
                 </div>
                 <button onclick="document.getElementById('upload-memory-modal').classList.add('hidden')" class="w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center transition-colors">
                     <span class="material-symbols-outlined text-gray-400 text-[20px]">close</span>

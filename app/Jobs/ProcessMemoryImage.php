@@ -83,91 +83,11 @@ class ProcessMemoryImage implements ShouldQueue
             return;
         }
 
-        // 2. Download from Google Drive if URL is stored, otherwise fallback to local
-        $tempLocalPath = null;
-        $isTemporary = false;
-        
-        try {
-            if (str_starts_with($memory->file_path, 'http://') || str_starts_with($memory->file_path, 'https://')) {
-                $fileId = null;
-                if (preg_match('/\/file\/d\/([a-zA-Z0-9_-]+)/', $memory->file_path, $matches)) {
-                    $fileId = $matches[1];
-                } elseif (preg_match('/id=([a-zA-Z0-9_-]+)/', $memory->file_path, $matches)) {
-                    $fileId = $matches[1];
-                }
-
-                if ($fileId) {
-                    $client = new \Google\Client();
-                    $client->setClientId(config('services.google.client_id'));
-                    $client->setClientSecret(config('services.google.client_secret'));
-                    $client->refreshToken(config('services.google.refresh_token'));
-                    $client->addScope(\Google\Service\Drive::DRIVE);
-                    
-                    $service = new \Google\Service\Drive($client);
-
-                    // Check file size first to avoid OOM for huge files
-                    $metadata = $service->files->get($fileId, ['fields' => 'size']);
-                    $fileSize = $metadata->getSize();
-                    if ($fileSize > 20 * 1024 * 1024) {
-                        Log::info("Skipping Google Drive image content download for file ID {$fileId}: size is too large (" . round($fileSize / 1024 / 1024, 2) . " MB)");
-                        $memory->update([
-                            'location' => $resolvedAddress ?? 'Lokasi tidak terdeteksi',
-                            'ai_tags' => ['large file'],
-                        ]);
-                        return;
-                    }
-
-                    $response = $service->files->get($fileId, ['alt' => 'media']);
-                    $imageContent = $response->getBody()->getContents();
-                    
-                    $tempLocalPath = tempnam(sys_get_temp_dir(), 'gemini_');
-                    file_put_contents($tempLocalPath, $imageContent);
-                    $isTemporary = true;
-                } else {
-                    throw new \Exception("Could not extract Google Drive File ID from: " . $memory->file_path);
-                }
-            } else {
-                $tempLocalPath = storage_path('app/public/' . $memory->file_path);
-                if (file_exists($tempLocalPath) && filesize($tempLocalPath) > 20 * 1024 * 1024) {
-                    Log::info("Skipping local image content AI processing: size is too large (" . round(filesize($tempLocalPath) / 1024 / 1024, 2) . " MB)");
-                    $memory->update([
-                        'location' => $resolvedAddress ?? 'Lokasi tidak terdeteksi',
-                        'ai_tags' => ['large file'],
-                    ]);
-                    return;
-                }
-            }
-        } catch (\Exception $e) {
-            Log::error("Failed to read image for AI processing: " . $e->getMessage());
-            $memory->update([
-                'location' => $resolvedAddress ?? 'Lokasi tidak terdeteksi',
-                'ai_tags' => [],
-            ]);
-            return;
-        }
-
-        // 3. Call Gemini AI to get tags and fallback location
-        try {
-            $aiService = new TripAIService();
-            $result = $aiService->analyzeImage($tempLocalPath, $resolvedAddress);
-
-            $memory->update([
-                'location' => $result['location'] ?? $resolvedAddress ?? 'Lokasi tidak terdeteksi',
-                'ai_tags' => $result['tags'] ?? [],
-            ]);
-        } catch (\Exception $e) {
-            Log::error("ProcessMemoryImage Job Exception: " . $e->getMessage());
-            
-            // Fallback so it doesn't show "Menganalisis lokasi..." forever
-            $memory->update([
-                'location' => $resolvedAddress ?? 'Lokasi tidak terdeteksi',
-                'ai_tags' => [],
-            ]);
-        } finally {
-            // Clean up temporary file
-            if ($isTemporary && $tempLocalPath && file_exists($tempLocalPath)) {
-                @unlink($tempLocalPath);
-            }
-        }
+        // AI auto captioning / visual analysis is disabled as requested by the user.
+        // We directly update the memory with the geocoded location and empty tags, bypassing Google Drive downloads and Gemini calls.
+        $memory->update([
+            'location' => $resolvedAddress ?? 'Lokasi tidak terdeteksi',
+            'ai_tags' => [],
+        ]);
     }
 }
